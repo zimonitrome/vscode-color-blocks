@@ -1,6 +1,10 @@
 # color-block-comments README
 
-This is the README for your extension "color-block-comments". After writing up a brief description, we recommend including the following sections.
+Add colorful comments ranges that span multiple lines. This makes it more clear to understand what lines a comment refers to and can thus be used to group, and organize your code. It also makes it easier for you to find your way in long spaghetti code.
+
+## Rationale
+
+We as humans are very dependent on our vision to perform task. Programming is no different. I often find myself getting lost in long files of code. I want an extension that helps me navigate regions of similar looking code through
 
 ## Features
 
@@ -11,10 +15,6 @@ For example if there is an image subfolder under your extension project workspac
 \!\[feature X\]\(images/feature-x.png\)
 
 > Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
 ## Extension Settings
 
@@ -27,25 +27,44 @@ This extension contributes the following settings:
 * `myExtension.enable`: enable/disable this extension
 * `myExtension.thing`: set to `blah` to do something
 
+## Inspired by
+
+* [Better Comments](https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments)
+* [Blockman](https://marketplace.visualstudio.com/items?itemName=leodevbro.blockman)
+* [HiLight](https://marketplace.visualstudio.com/items?itemName=f0lio.hilight)
+
+## TODO:
+
+Should do:
+* Enable block comments.
+* Publish extension
+* Record videos to show features
+* Finish readme
+* Test performance on slow PCs
+    * Reduce update requency
+* Fix nested highlights
+* Fix indentation comments
+
+Could do:
+* Change the syntax
+* Make syntax configurable
+* Add optional left padding
+* Add optional left bar
+* Add optional pattern such as stripes to the background
+* Setting to wrap indentation before and after
+
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+* Special characters longer than 1ch might overflow the comment range
+* Block comments are not supported for the moment.
+* Nested blocks currently look weird
+* Snippet/commands does not support indentation when wrapping
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.0
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Pre release
 
 -----------------------------------------------------------------------------------------------------------
 ## Following extension guidelines
@@ -53,18 +72,3 @@ Added features X, Y, and Z.
 Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
 
 * [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
