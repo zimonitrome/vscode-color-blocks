@@ -3,38 +3,49 @@
 import * as vscode from 'vscode';
 import { hexCodeRegex, hexToHsl, hslToHex } from './colorHelpers';
 import { CommentConfigHandler } from './commentConfigHandler';
-
-// import { Parser } from './parser';
+import { styleRange } from './styleRange';
 
 interface DecorationRange {
     hexColor: string;
+    matchRange: vscode.Range;
     matchTextCommentRange: vscode.Range;
-    matchCbcArgsRange: vscode.Range;
+    matchLineArgRange: vscode.Range;
     startLine: number;
     endLine: number;
 }
 
+const getSettings = () => vscode.workspace.getConfiguration("Color Block Comments");
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
-    console.log("YO");
-
-    let disposable = vscode.commands.registerCommand('color-block-comments.helloWorld', () => {
-        vscode.window.showInformationMessage('Hello World from Color Block Comments!');
-    });
-
-    // let parser = new Parser();
-    context.subscriptions.push(disposable);
-
     let activeEditor: vscode.TextEditor;
-    // let parser: Parser = new Parser();
+
+    let disposable = vscode.commands.registerCommand('color-block-comments.makeComment', () => {
+        // vscode.window.showInformationMessage('Hello World from Color Block Comments!');
+        // console.log(activeEditor.selection);
+        // activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
+        //     // const editRange = decorationRange.matchLineArgRange;
+        //     // editBuilder.replace(editRange, nLinesAfter.toString());
+        //     editBuilder.
+        // });
+        // activeEditor.insertSnippet(new vscode.SnippetString("For Loop"));
+        // vscode.commands.executeCommand("editor.action.insertSnippet", { langId: "javascript", name: "For Loop" })
+        // const snippet = new vscode.SnippetString("option1 attr1=${2:Option 1 Placeholder 1} attr2=${3:Option 1 Placeholder 2}");
+        
+        // activeEditor.insertSnippet(snippet);
+        // activeEditor.insertSnippet();
+        activeEditor.insertSnippet(new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX},${3:1}}$0"));
+    });
+    context.subscriptions.push(disposable);
 
     let decorationRanges: Array<DecorationRange> = [];
     let allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
     const commentConfigHandler = new CommentConfigHandler();
     let commentDelimmiter = "";
+
+    let settings = getSettings();
 
     function updateCommentDelimmiter() {
         let commentConfig = commentConfigHandler.getCommentConfig(activeEditor.document.languageId);
@@ -46,7 +57,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     function updateExistingDecorationRanges(contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
-        // let itemsUpdated = 0;
         // If the user makes a change inside a decoration that results in a change of # of lines,
         // update the number listed inside the cbc braces.
         for (const change of contentChanges) {
@@ -57,43 +67,32 @@ export function activate(context: vscode.ExtensionContext) {
             const diff = linesInserted - linesInRange;
 
             if (diff === 0) {
-                // itemsUpdated++;
                 continue;
             }
 
             decorationRanges.forEach((decorationRange) => {
-                if (change.range.start.isAfterOrEqual(decorationRange.matchCbcArgsRange.end) && (change.range.start.line <= decorationRange.endLine)) {
+                
+                if (change.range.start.isAfterOrEqual(decorationRange.matchRange.end) && (change.range.start.line <= decorationRange.endLine)) {
                     // Change range starts inside dec range
-                    const nLinesBefore = decorationRange.endLine - decorationRange.startLine + 1;
+                    const nLinesBeforeEdit = decorationRange.endLine - decorationRange.startLine + 1;
                     decorationRange.endLine += diff;
                     const nLinesAfter = decorationRange.endLine - decorationRange.startLine + 1;
-                    console.log(nLinesBefore, nLinesAfter);
                     activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
-                        const editRange = new vscode.Range(
-                            new vscode.Position(
-                                decorationRange.matchCbcArgsRange.start.line,
-                                decorationRange.matchCbcArgsRange.start.character + 4
-                            ),
-                            new vscode.Position(
-                                decorationRange.matchCbcArgsRange.start.line,
-                                decorationRange.matchCbcArgsRange.start.character + 4 + nLinesBefore.toString().length
-                            ));
+                        const editRange = decorationRange.matchLineArgRange;
                         editBuilder.replace(editRange, nLinesAfter.toString());
-                    });
+                    }, {undoStopBefore: false, undoStopAfter: false});
                 }
             });
         }
-        // if (itemsUpdated === 0)
-        //     return false;
-        // return true;
     }
 
-
+    // Scan document for color block comments
     function addNewDecorationRanges(event: vscode.TextDocumentChangeEvent | undefined = undefined) {
         if (!activeEditor) return; // Needed?
+        if (!commentDelimmiter) return;
 
         let text = activeEditor.document.getText();
-        let regEx = new RegExp(`${escapeRegex(commentDelimmiter)}(.*?)cbc\{(.*?)\}`, "ig");
+        let regEx = new RegExp(String.raw`${escapeRegex(commentDelimmiter)}(.*){(.*?)}`, "ig");
 
         let match: any;
         matchLoop:
@@ -104,50 +103,54 @@ export function activate(context: vscode.ExtensionContext) {
             let matchEndPos = new vscode.Position(startLine, matchStartPos.character + match[0].length);
             let matchRange = new vscode.Range(matchStartPos, matchEndPos);
 
-            // Found a prev
+            // Found a previously defined range
             for (let decorationRange of decorationRanges) {
                 if (decorationRange.startLine === startLine) {
-                    break matchLoop;
+                    continue matchLoop;
                 }
             }
 
-            let matchTextComment: string = match[1];
+            // Extract relevant information from match
+            const matchTextComment: string = match[1];
+            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1).replace(/ /g,''));
+            if (values.length !== 2) continue; // Hard coded to accept 2 values for now
+            let [hexColor, nCommentLines] = values;
+            nCommentLines = parseInt(nCommentLines);
 
-            let matchCbcArgs = match[2].split(',');
-            let nCommentLines = parseInt(matchCbcArgs[0]);
-            let hexColor = matchCbcArgs[1];
+            if (!nCommentLines || !hexCodeRegex.test(hexColor)) continue;
 
-            if (!matchCbcArgs || !hexCodeRegex.test(hexColor)) {
-                continue;
+            if (settings.standardizeColorBrightness.enabled) {
+                let [h, s, l] = hexToHsl(hexColor);
+                l = settings.standardizeColorBrightness.background;
+                hexColor = hslToHex(h, s, l);
             }
 
+            // Save relevant ranges
             let endLine = startLine + (nCommentLines ? nCommentLines - 1 : 0);
 
             let matchTextCommentRange = new vscode.Range(
                 new vscode.Position(startLine, matchStartPos.character + commentDelimmiter.length),
                 new vscode.Position(startLine, matchStartPos.character + commentDelimmiter.length + matchTextComment.length)
             );
-            let matchCbcArgsRange = new vscode.Range(
-                matchTextCommentRange.end,
-                matchRange.end
-            );
 
-            let [h, s, l] = hexToHsl(hexColor);
-            l = 50;
-            hexColor = hslToHex(h, s, l);
+            let linesArgOffset = /(?<=[\s,:])\d+/.exec(match[2])!.index + 1; // +1 for '{' in above match
+
+            let matchLineArgRange = new vscode.Range(
+                // matchTextCommentRange.end,
+                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset),
+                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset + nCommentLines.toString().length),
+            );
 
             decorationRanges.push({
                 hexColor: hexColor,
+                matchRange: matchRange,
                 matchTextCommentRange: matchTextCommentRange,
-                matchCbcArgsRange: matchCbcArgsRange,
+                matchLineArgRange: matchLineArgRange,
                 startLine: startLine,
                 endLine: endLine,
             });
         }
     }
-
-    const borderWidth = 2;
-    const borderRadius = 4;
 
     function redrawDecorationRanges() {
         // Clear all decoration types
@@ -155,96 +158,15 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Color all range lines
         decorationRanges.forEach(decorationRange => {
-            const nCommentLines = decorationRange.endLine - decorationRange.startLine + 1;
-
-            const decorationTypeArguments = {
-                isWholeLine: true,
-                backgroundColor: decorationRange.hexColor + "33",
-                overviewRulerColor: decorationRange.hexColor + "33",
-                borderWidth: `0 ${borderWidth}px 0 ${borderWidth}px`,
-                borderColor: decorationRange.hexColor + "66",
-                borderStyle: "solid",
-            };
-
-            let [h, s, l] = hexToHsl(decorationRange.hexColor);
-            l = 80;
-            let lighterHexColor = hslToHex(h, s, l);
-
-            // Style middle lines
-            if (nCommentLines >= 3) {
-                const midLineDecor = vscode.window.createTextEditorDecorationType(decorationTypeArguments);
-                activeEditor.setDecorations(
-                    midLineDecor,
-                    [new vscode.Range(new vscode.Position(decorationRange.startLine + 1, 0), new vscode.Position(decorationRange.endLine - 1, 1))]
-                );
-                allDecorationTypes.push(midLineDecor);
-            }
-
-            // Style top and bottom lines
-            if (nCommentLines >= 2) {
-                // Top line
-                const topLineDecor = vscode.window.createTextEditorDecorationType({
-                    ...decorationTypeArguments,
-                    borderWidth: `${borderWidth}px ${borderWidth}px 0 ${borderWidth}px`,
-                    borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
-                    color: lighterHexColor
-                });
-                activeEditor.setDecorations(
-                    topLineDecor,
-                    [new vscode.Range(new vscode.Position(decorationRange.startLine, 0), new vscode.Position(decorationRange.startLine, 1))]
-                );
-                allDecorationTypes.push(topLineDecor);
-
-                // Bottom line
-                const bottomLineDecor = vscode.window.createTextEditorDecorationType({
-                    ...decorationTypeArguments,
-                    borderWidth: `0 ${borderWidth}px ${borderWidth}px ${borderWidth}px`,
-                    borderRadius: `0 0 ${borderRadius}px ${borderRadius}px`,
-                });
-                activeEditor.setDecorations(
-                    bottomLineDecor,
-                    [new vscode.Range(new vscode.Position(decorationRange.endLine, 0), new vscode.Position(decorationRange.endLine, 1))]
-                );
-                allDecorationTypes.push(bottomLineDecor);
-            }
-            // Style a single line
-            else {
-                const singleLineDecor = vscode.window.createTextEditorDecorationType({
-                    ...decorationTypeArguments,
-                    borderWidth: `${borderWidth}px`,
-                    borderRadius: `${borderRadius}px`,
-                    color: lighterHexColor
-                });
-                activeEditor.setDecorations(
-                    singleLineDecor,
-                    [new vscode.Range(new vscode.Position(decorationRange.startLine, 0), new vscode.Position(decorationRange.endLine, 1))]
-                );
-                allDecorationTypes.push(singleLineDecor);
-            }
-
-            // Style cbc args
-            let keywordDecorationType = vscode.window.createTextEditorDecorationType({
-                opacity: "0.5"
-            });
-            activeEditor.setDecorations(
-                keywordDecorationType,
-                [decorationRange.matchCbcArgsRange]
-            );
-            allDecorationTypes.push(keywordDecorationType);
-
-            // Style comment text
-            let commentDecorationType = vscode.window.createTextEditorDecorationType({
-                fontWeight: "bold"
-            });
-            activeEditor.setDecorations(
-                commentDecorationType,
-                [decorationRange.matchTextCommentRange]
-            );
-            allDecorationTypes.push(commentDecorationType);
-
+            styleRange(decorationRange, activeEditor, allDecorationTypes, settings);
         });
 
     };
+    
+    vscode.workspace.onDidChangeConfiguration(event => {
+        settings = getSettings();
+        triggerUpdateDecorations();
+    });
 
     // Get the active editor for the first time and initialise the regex
     if (vscode.window.activeTextEditor) {
@@ -253,94 +175,35 @@ export function activate(context: vscode.ExtensionContext) {
         triggerUpdateDecorations();
     }
 
-    // * Handle active file changed
+    // Handle active file changed
     vscode.window.onDidChangeActiveTextEditor(editor => {
         if (editor) {
             activeEditor = editor;
-            decorationRanges = [];
             updateCommentDelimmiter();
+            decorationRanges = [];
             triggerUpdateDecorations();
         }
     }, null, context.subscriptions);
 
-    // * Handle file contents changed
+    // Handle file contents changed
     vscode.workspace.onDidChangeTextDocument(event => {
         if (activeEditor && event.document === activeEditor.document) {
-            console.log(event);
             if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
                 // Event was not caused by an undo/redo
                 // Manually update existing decoration text
-                updateExistingDecorationRanges(event.contentChanges);
+                if (settings.behavior.autoUpdate)
+                    updateExistingDecorationRanges(event.contentChanges);
             }
             triggerUpdateDecorations();
         }
     }, null, context.subscriptions);
 
-    // * IMPORTANT:
-    // To avoid calling update too often,
-    // set a timer for 200ms to wait before updating decorations
-    var timeout: NodeJS.Timer;
     function triggerUpdateDecorations() {
-        // if (timeout) {
-        //     clearTimeout(timeout);
-        // }
-        // timeout = setTimeout(() => {
-        //     decorationRanges = [];
-        //     addNewDecorationRanges();
-        //     redrawDecorationRanges();
-        // }, 200);
         decorationRanges = [];
         addNewDecorationRanges();
         redrawDecorationRanges();
     }
-
-    // function backspace(a: any) {
-    //     console.log("KEY PRESSED!", a);
-    //     return vscode.commands.executeCommand('deleteLeft');
-    // }
-
-    // context.subscriptions.push(vscode.commands.registerCommand('jrieken.backspaceLeft', backspace));
-
-    function overrideCommand(
-        context: vscode.ExtensionContext,
-        command: string,
-        callback: (...args: any[]) => any
-    ) {
-        const disposable = vscode.commands.registerCommand(command, async (args) => {
-            // if (configuration.disableExtension) {
-            //     return vscode.commands.executeCommand('default:' + command, args);
-            // }
-
-            if (!vscode.window.activeTextEditor) {
-                return;
-            }
-
-            if (
-                vscode.window.activeTextEditor.document &&
-                vscode.window.activeTextEditor.document.uri.toString() === 'debug:input'
-            ) {
-                return vscode.commands.executeCommand('default:' + command, args);
-            }
-
-            return callback(args);
-        });
-        context.subscriptions.push(disposable);
-    }
-
-    // // override vscode commands
-    // overrideCommand(context, 'type', async args => {
-    //     // taskQueue.enqueueTask(async () => {
-    //     //     const mh = await getAndUpdateModeHandler();
-
-    //     //     if (compositionState.isInComposition) {
-    //     //         compositionState.composingText += args.text;
-    //     //     } else {
-    //     //         await mh.handleKeyEvent(args.text);
-    //     //     }
-    //     // });
-    //     console.log("heh");
-    // });
 }
 
 // this method is called when your extension is deactivated

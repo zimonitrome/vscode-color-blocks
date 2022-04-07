@@ -86,3 +86,12 @@ export function hslToHex(h: number, s: number, l: number) {
 
     return "#" + r + g + b;
 }
+
+// From: https://stackoverflow.com/a/697841
+export function decimalToHexString(decimal: number) {
+    let hexString = decimal.toString(16);
+    if (hexString.length < 2)
+        hexString = `0${hexString}`;
+
+    return hexString;
+}

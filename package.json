@@ -17,13 +17,131 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "color-block-comments.helloWorld",
-				"title": "Hello World"
+				"command": "color-block-comments.makeComment",
+				"title": "Create Block Comment"
 			}
 		],
 		"snippets": [
 			{
 				"path": "./src/cbc_snippets.code-snippets"
+			}
+		],
+		"configuration": [
+			{
+				"title": "Wrap Text",
+				"properties": {
+					"Color Block Comments.wrapText.enabled": {
+						"type": "boolean",
+						"default": false,
+						"description": "Make the color block shrink horizontally to match the minimum amount of code.",
+						"scope": "window",
+						"order": 0
+					},
+					"Color Block Comments.wrapText.padding": {
+						"type": "number",
+						"default": 1,
+						"description": "Padding to add if `wrapText` is enabled. Measured in characters.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Standardize Color Brightness",
+				"properties": {
+					"Color Block Comments.standardizeColorBrightness.enabled": {
+						"type": "boolean",
+						"default": true,
+						"description": "Change colors to standardized brightness. Configurable with `backgroundColorBrightness` and `backgroundColorBrightness`",
+						"scope": "window",
+						"order": 0
+					},
+					"Color Block Comments.standardizeColorBrightness.background": {
+						"type": "number",
+						"default": 50,
+						"description": "Lumens value to use when standardizing background brightness.",
+						"scope": "window"
+					},
+					"Color Block Comments.standardizeColorBrightness.commentText": {
+						"type": "number",
+						"default": 80,
+						"description": "Lumens value to use when standardizing brightness of the text of the first line of the colored block.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Border",
+				"properties": {
+					"Color Block Comments.border.width": {
+						"type": "string",
+						"default": "0.2ch",
+						"description": "CSS border width.",
+						"scope": "window"
+					},
+					"Color Block Comments.border.radius": {
+						"type": "string",
+						"default": "0.5ch",
+						"description": "CSS border radius.",
+						"scope": "window"
+					},
+					"Color Block Comments.border.opacity": {
+						"type": "number",
+						"default": 0.4,
+						"description": "Opacity/alpha in the range 0-1.",
+						"scope": "window"
+					},
+					"Color Block Comments.border.style": {
+						"type": "string",
+						"default": "solid",
+						"description": "CSS border-style.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Background",
+				"properties": {
+					"Color Block Comments.background.opacity": {
+						"type": "number",
+						"default": "0.2",
+						"description": "Opacity/alpha in the range 0-1.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Comment Line",
+				"properties": {
+					"Color Block Comments.commentLine.color": {
+						"type": "boolean",
+						"default": true,
+						"description": "Apply color to the comment line text.",
+						"scope": "window"
+					},
+					"Color Block Comments.commentLine.lineOpacity": {
+						"type": "number",
+						"default": 0.4,
+						"description": "Opacity of the comment delimiter and color block arguments.",
+						"scope": "window"
+					},
+					"Color Block Comments.commentLine.commentFontWeight": {
+						"type": "string",
+						"default": "bold",
+						"description": "CSS font-weight of the main comment text.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Behavior",
+				"properties": {
+					"Color Block Comments.behavior.autoUpdate": {
+						"type": "boolean",
+						"default": true,
+						"description": "Automatically update color blocks when lines are added/removed inside its range.",
+						"scope": "window"
+					}
+				}
 			}
 		]
 	},
