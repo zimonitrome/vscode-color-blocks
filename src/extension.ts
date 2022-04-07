@@ -22,20 +22,13 @@ export function activate(context: vscode.ExtensionContext) {
     let activeEditor: vscode.TextEditor;
 
     let disposable = vscode.commands.registerCommand('color-block-comments.makeComment', () => {
-        // vscode.window.showInformationMessage('Hello World from Color Block Comments!');
-        // console.log(activeEditor.selection);
-        // activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
-        //     // const editRange = decorationRange.matchLineArgRange;
-        //     // editBuilder.replace(editRange, nLinesAfter.toString());
-        //     editBuilder.
-        // });
-        // activeEditor.insertSnippet(new vscode.SnippetString("For Loop"));
-        // vscode.commands.executeCommand("editor.action.insertSnippet", { langId: "javascript", name: "For Loop" })
-        // const snippet = new vscode.SnippetString("option1 attr1=${2:Option 1 Placeholder 1} attr2=${3:Option 1 Placeholder 2}");
-        
-        // activeEditor.insertSnippet(snippet);
-        // activeEditor.insertSnippet();
-        activeEditor.insertSnippet(new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX},${3:1}}$0"));
+        // Currently no supported way to call existing snippets easily and add custom args?
+        const firstLine = Math.min(activeEditor.selection.end.line, activeEditor.selection.start.line);
+        const commenLines = Math.abs(activeEditor.selection.end.line - activeEditor.selection.start.line + 2);
+        activeEditor.insertSnippet(
+            new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX}," + commenLines.toString() + "}\n"),
+            new vscode.Position(firstLine, 0)
+        );
     });
     context.subscriptions.push(disposable);
 
@@ -71,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             decorationRanges.forEach((decorationRange) => {
-                
+
                 if (change.range.start.isAfterOrEqual(decorationRange.matchRange.end) && (change.range.start.line <= decorationRange.endLine)) {
                     // Change range starts inside dec range
                     const nLinesBeforeEdit = decorationRange.endLine - decorationRange.startLine + 1;
@@ -80,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
                     activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
                         const editRange = decorationRange.matchLineArgRange;
                         editBuilder.replace(editRange, nLinesAfter.toString());
-                    }, {undoStopBefore: false, undoStopAfter: false});
+                    }, { undoStopBefore: false, undoStopAfter: false });
                 }
             });
         }
@@ -112,18 +105,17 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Extract relevant information from match
             const matchTextComment: string = match[1];
-            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1).replace(/ /g,''));
+            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1).replace(/ /g, ''));
             if (values.length !== 2) continue; // Hard coded to accept 2 values for now
             let [hexColor, nCommentLines] = values;
             nCommentLines = parseInt(nCommentLines);
 
             if (!nCommentLines || !hexCodeRegex.test(hexColor)) continue;
 
-            if (settings.standardizeColorBrightness.enabled) {
-                let [h, s, l] = hexToHsl(hexColor);
+            let [h, s, l] = hexToHsl(hexColor);
+            if (settings.standardizeColorBrightness.enabled)
                 l = settings.standardizeColorBrightness.background;
-                hexColor = hslToHex(h, s, l);
-            }
+            hexColor = hslToHex(h, s, l);
 
             // Save relevant ranges
             let endLine = startLine + (nCommentLines ? nCommentLines - 1 : 0);
@@ -162,7 +154,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
     };
-    
+
     vscode.workspace.onDidChangeConfiguration(event => {
         settings = getSettings();
         triggerUpdateDecorations();

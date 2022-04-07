@@ -3,14 +3,13 @@ import { hexToHsl, hslToHex, decimalToHexString } from './colorHelpers';
 
 export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor, allDecorationTypes: any, settings: any) => {
     const nCommentLines = decorationRange.endLine - decorationRange.startLine + 1;
-    
+
     let lighterHexColor = decorationRange.hexColor;
 
-    if (settings.standardizeColorBrightness.enabled) {
-        let [h, s, l] = hexToHsl(decorationRange.hexColor);
+    let [h, s, l] = hexToHsl(decorationRange.hexColor);
+    if (settings.standardizeColorBrightness.enabled)
         l = settings.standardizeColorBrightness.commentText;
-        lighterHexColor = hslToHex(h, s, l);
-    }
+    lighterHexColor = hslToHex(h, s, l);
 
     let longestLineLength = 0;
     for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++)
@@ -20,8 +19,8 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
     let customWidth!: string;
     if (settings.wrapText.enabled) {
         const padding = settings.wrapText.padding;
-        customMarginRight = `-${longestLineLength+padding}ch`;
-        customWidth = `${longestLineLength+padding}ch`;
+        customMarginRight = `-${longestLineLength + padding}ch`;
+        customWidth = `${longestLineLength + padding}ch`;
     }
     else {
         const scrollbarSize = vscode.workspace.getConfiguration('editor').scrollbar.verticalScrollbarSize;
@@ -29,9 +28,9 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
         customWidth = `calc(100% - ${scrollbarSize}px)`;
     }
 
-    let backgroundHexColor = decorationRange.hexColor + decimalToHexString(255*settings.background.opacity);
-    let borderHexColor = decorationRange.hexColor + decimalToHexString(255*settings.border.opacity);
-    
+    let backgroundHexColor = decorationRange.hexColor + decimalToHexString(255 * settings.background.opacity);
+    let borderHexColor = decorationRange.hexColor + decimalToHexString(255 * settings.border.opacity);
+
     // We must style each line individually because...
     // - Normally styling the entire line prevents us from setting a custom width
     //   i.e. use 100% to refer to the text part. We must style the entire line
@@ -72,7 +71,7 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
             },
             // Custom styling for top line only
             ...(isTopLine && {
-                ...(settings.commentLine.color && {color: lighterHexColor}),
+                ...(settings.commentLine.color && { color: lighterHexColor }),
                 // Fix misaligned text in top line
                 textDecoration: `; position: relative; top: -${topWidth};`
             })
