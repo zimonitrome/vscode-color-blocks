@@ -52,6 +52,7 @@ Could do:
 * Add optional left bar
 * Add optional pattern such as stripes to the background
 * Setting to wrap indentation before and after
+* Setting to store color ranges in a separate file. For `myfile.py` a 2nd file `myfile.py.cbc` would be used.
 
 ## Known Issues
 
