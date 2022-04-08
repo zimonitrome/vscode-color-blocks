@@ -8,13 +8,9 @@ We as humans are very dependent on our vision to perform task. Programming is no
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Three different ways to add color comments.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+![feature X](readme-media/basic_preview.gif)
 
 ## Extension Settings
 
@@ -40,10 +36,13 @@ Should do:
 * Publish extension
 * Record videos to show features
 * Finish readme
+    * First media should be a basic image showing the color comments.
+    * Then videos showing usage and different settings etc.
 * Test performance on slow PCs
-    * Reduce update requency
+    * Reduce update frequency
 * Fix nested highlights
 * Fix indentation comments
+* Read extension guidelines and make sure this repo follows them
 
 Could do:
 * Change the syntax
