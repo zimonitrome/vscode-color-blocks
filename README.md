@@ -29,6 +29,8 @@ This extension contributes the following settings:
 * [Blockman](https://marketplace.visualstudio.com/items?itemName=leodevbro.blockman)
 * [HiLight](https://marketplace.visualstudio.com/items?itemName=f0lio.hilight)
 
+GIFs were produced using [Gifski](https://gif.ski/).
+
 ## TODO:
 
 Should do:
@@ -40,7 +42,8 @@ Should do:
     * Then videos showing usage and different settings etc.
 * Test performance on slow PCs
     * Reduce update frequency
-* Fix nested highlights
+* Fix select > Create comment beahvior
+* ~Fix nested highlights~
 * Fix indentation comments
 * Read extension guidelines and make sure this repo follows them
 
@@ -52,6 +55,9 @@ Could do:
 * Add optional pattern such as stripes to the background
 * Setting to wrap indentation before and after
 * Setting to store color ranges in a separate file. For `myfile.py` a 2nd file `myfile.py.cbc` would be used.
+* Support light theme better
+    * Make comments lighter instead of brighter
+        * Change settings and variable to not say "brighter"/"lighter"
 
 ## Known Issues
 

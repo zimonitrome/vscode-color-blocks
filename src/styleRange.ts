@@ -64,16 +64,16 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
                     border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
                     pointer-events: none;
                     margin-right: ${customMarginRight};
-                    box-sizing: border-box;`,
+                    box-sizing: border-box;
+                    position: absolute;`,
                 contentText: " ",
                 width: customWidth,
                 height: "100%",
             },
+            textDecoration: `; position: relative;`,
             // Custom styling for top line only
             ...(isTopLine && {
                 ...(settings.commentLine.color && { color: lighterHexColor }),
-                // Fix misaligned text in top line
-                textDecoration: `; position: relative; top: -${topWidth};`
             })
         });
         activeEditor.setDecorations(
