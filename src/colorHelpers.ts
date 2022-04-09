@@ -5,13 +5,13 @@ export function hexToHsl(hexColor: string) {
     // Convert hex to RGB first
     let r = 0, g = 0, b = 0;
     if (hexColor.length === 4) {
-        r = "0x" + hexColor[1] + hexColor[1];
-        g = "0x" + hexColor[2] + hexColor[2];
-        b = "0x" + hexColor[3] + hexColor[3];
+        r = parseInt("0x" + hexColor[1] + hexColor[1]);
+        g = parseInt("0x" + hexColor[2] + hexColor[2]);
+        b = parseInt("0x" + hexColor[3] + hexColor[3]);
     } else if (hexColor.length === 7) {
-        r = "0x" + hexColor[1] + hexColor[2];
-        g = "0x" + hexColor[3] + hexColor[4];
-        b = "0x" + hexColor[5] + hexColor[6];
+        r = parseInt("0x" + hexColor[1] + hexColor[2]);
+        g = parseInt("0x" + hexColor[3] + hexColor[4]);
+        b = parseInt("0x" + hexColor[5] + hexColor[6]);
     }
     // Then to HSL
     r /= 255;
@@ -72,19 +72,12 @@ export function hslToHex(h: number, s: number, l: number) {
         r = c; g = 0; b = x;
     }
     // Having obtained RGB, convert channels to hex
-    r = Math.round((r + m) * 255).toString(16);
-    g = Math.round((g + m) * 255).toString(16);
-    b = Math.round((b + m) * 255).toString(16);
+    let stringColor = [r,g,b].map(color => Math.round((color + m) * 255).toString(16));
 
     // Prepend 0s, if necessary
-    if (r.length === 1)
-        r = "0" + r;
-    if (g.length === 1)
-        g = "0" + g;
-    if (b.length === 1)
-        b = "0" + b;
+    stringColor = stringColor.map(color => (color.length === 1) ? '0' + color : color);
 
-    return "#" + r + g + b;
+    return "#" + stringColor.join('');
 }
 
 // From: https://stackoverflow.com/a/697841
