@@ -1,15 +1,23 @@
 {
-	"name": "color-block-comments",
-	"displayName": "Color Block Comments",
+	"name": "color-blocks",
+	"displayName": "Color Blocks",
 	"description": "",
 	"version": "0.0.1",
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"comments",
+		"highlight",
+		"block",
+		"range",
+		"annotate"
+	],
+	"license": "MIT",
 	"engines": {
 		"vscode": "^1.65.0"
 	},
-	"categories": [
-		"Other",
-		"Snippets"
-	],
+	"icon": "/media/icon.png",
 	"activationEvents": [
 		"*"
 	],
@@ -17,27 +25,27 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "color-block-comments.makeComment",
-				"title": "Create Block Comment"
+				"command": "color-blocks.add",
+				"title": "Add Color Block"
 			}
 		],
 		"snippets": [
 			{
-				"path": "./src/cbc_snippets.code-snippets"
+				"path": "./src/snippets.code-snippets"
 			}
 		],
 		"configuration": [
 			{
 				"title": "Wrap Text",
 				"properties": {
-					"Color Block Comments.wrapText.enabled": {
+					"color-blocks.wrapText.enabled": {
 						"type": "boolean",
 						"default": false,
 						"description": "Make the color block shrink horizontally to match the minimum amount of code.",
 						"scope": "window",
 						"order": 0
 					},
-					"Color Block Comments.wrapText.padding": {
+					"color-blocks.wrapText.padding": {
 						"type": "number",
 						"default": 1,
 						"description": "Padding to add if `wrapText` is enabled. Measured in characters.",
@@ -48,20 +56,20 @@
 			{
 				"title": "Standardize Color Brightness",
 				"properties": {
-					"Color Block Comments.standardizeColorBrightness.enabled": {
+					"color-blocks.standardizeColorBrightness.enabled": {
 						"type": "boolean",
 						"default": true,
 						"description": "Change colors to standardized brightness. Configurable with `backgroundColorBrightness` and `backgroundColorBrightness`",
 						"scope": "window",
 						"order": 0
 					},
-					"Color Block Comments.standardizeColorBrightness.background": {
+					"color-blocks.standardizeColorBrightness.background": {
 						"type": "number",
 						"default": 50,
 						"description": "Lumens value to use when standardizing background brightness.",
 						"scope": "window"
 					},
-					"Color Block Comments.standardizeColorBrightness.commentText": {
+					"color-blocks.standardizeColorBrightness.commentText": {
 						"type": "number",
 						"default": 80,
 						"description": "Lumens value to use when standardizing brightness of the text of the first line of the colored block.",
@@ -72,25 +80,25 @@
 			{
 				"title": "Border",
 				"properties": {
-					"Color Block Comments.border.width": {
+					"color-blocks.border.width": {
 						"type": "string",
 						"default": "0.2ch",
 						"description": "CSS border width.",
 						"scope": "window"
 					},
-					"Color Block Comments.border.radius": {
+					"color-blocks.border.radius": {
 						"type": "string",
 						"default": "0.5ch",
 						"description": "CSS border radius.",
 						"scope": "window"
 					},
-					"Color Block Comments.border.opacity": {
+					"color-blocks.border.opacity": {
 						"type": "number",
 						"default": 0.4,
 						"description": "Opacity/alpha in the range 0-1.",
 						"scope": "window"
 					},
-					"Color Block Comments.border.style": {
+					"color-blocks.border.style": {
 						"type": "string",
 						"default": "solid",
 						"description": "CSS border-style.",
@@ -101,7 +109,7 @@
 			{
 				"title": "Background",
 				"properties": {
-					"Color Block Comments.background.opacity": {
+					"color-blocks.background.opacity": {
 						"type": "number",
 						"default": "0.2",
 						"description": "Opacity/alpha in the range 0-1.",
@@ -112,19 +120,19 @@
 			{
 				"title": "Comment Line",
 				"properties": {
-					"Color Block Comments.commentLine.color": {
+					"color-blocks.commentLine.color": {
 						"type": "boolean",
 						"default": true,
 						"description": "Apply color to the comment line text.",
 						"scope": "window"
 					},
-					"Color Block Comments.commentLine.lineOpacity": {
+					"color-blocks.commentLine.lineOpacity": {
 						"type": "number",
 						"default": 0.4,
 						"description": "Opacity of the comment delimiter and color block arguments.",
 						"scope": "window"
 					},
-					"Color Block Comments.commentLine.commentFontWeight": {
+					"color-blocks.commentLine.commentFontWeight": {
 						"type": "string",
 						"default": "bold",
 						"description": "CSS font-weight of the main comment text.",
@@ -135,7 +143,7 @@
 			{
 				"title": "Behavior",
 				"properties": {
-					"Color Block Comments.behavior.autoUpdate": {
+					"color-blocks.behavior.autoUpdate": {
 						"type": "boolean",
 						"default": true,
 						"description": "Automatically update color blocks when lines are added/removed inside its range.",
@@ -153,20 +161,15 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"lint": "eslint src --ext ts"
 	},
 	"devDependencies": {
-		"@types/glob": "^7.2.0",
-		"@types/mocha": "^9.1.0",
 		"@types/node": "14.x",
 		"@types/vscode": "^1.65.0",
 		"@typescript-eslint/eslint-plugin": "^5.12.1",
 		"@typescript-eslint/parser": "^5.12.1",
 		"@vscode/test-electron": "^2.1.2",
 		"eslint": "^8.9.0",
-		"glob": "^7.2.0",
-		"mocha": "^9.2.1",
 		"ts-loader": "^9.2.6",
 		"typescript": "^4.5.5",
 		"webpack": "^5.69.1",

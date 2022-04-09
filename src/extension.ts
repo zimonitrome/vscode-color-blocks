@@ -15,14 +15,14 @@ interface DecorationRange {
     endLine: number;
 }
 
-const getSettings = () => vscode.workspace.getConfiguration("Color Block Comments");
+const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     let activeEditor: vscode.TextEditor;
 
-    let disposable = vscode.commands.registerCommand('color-block-comments.makeComment', () => {
+    let disposable = vscode.commands.registerCommand("color-blocks.add", () => {
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
         for (let selection of activeEditor.selections) {
@@ -91,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    // Scan document for color block comments
+    // Scan document for color blockS
     function addNewDecorationRanges(event: vscode.TextDocumentChangeEvent | undefined = undefined) {
         if (!activeEditor) return; // Needed?
         if (!commentDelimmiter) return;
@@ -117,7 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Extract relevant information from match
             const matchTextComment: string = match[1];
-            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1).replace(/ /g, ''));
+            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1)!.replace(/ /g, ''));
             if (values.length !== 2) continue; // Hard coded to accept 2 values for now
             let [hexColor, nCommentLines] = values;
             nCommentLines = parseInt(nCommentLines);
