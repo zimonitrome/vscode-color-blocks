@@ -10,18 +10,7 @@ We as humans are very dependent on our vision to perform task. Programming is no
 
 Three different ways to add color blocks.
 
-![feature X](media/basic_preview.gif)
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+![feature X](https://raw.githubusercontent.com/zimonitrome/vscode-color-blocks/main/media/basic_preview.gif)
 
 ## Inspired by
 
@@ -35,17 +24,14 @@ GIFs were produced using [Gifski](https://gif.ski/).
 
 Should do:
 * Enable block comments
-* Publish extension
-* Record videos to show features
+* ~Record videos to show features~
+    * Record better videos that are updated
 * Finish readme
     * First media should be a basic image showing the color blocks
     * Then videos showing usage and different settings etc.
+    * Add settings section
 * Test performance on slow PCs
     * Reduce update frequency
-* ~Fix select > Create comment beahvior~ Fixed?
-* ~Fix nested highlights~
-* ~Fix indentation comments~
-* ~Read extension guidelines and make sure this repo follows them~
 
 Could do:
 * Change the syntax
@@ -74,10 +60,10 @@ Could do:
 
 ## Release Notes
 
-### 0.0.0
-
-Pre release
-
 ### 1.0.0
 
 First release 🥳 Straight out the oven baby!
+
+### 0.0.0
+
+Pre release
