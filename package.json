@@ -1,8 +1,13 @@
 {
 	"name": "color-blocks",
 	"displayName": "Color Blocks",
-	"description": "",
-	"version": "0.0.1",
+	"description": "Highlight ranges of code lines using comments.",
+	"publisher": "zimonitrome",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zimonitrome/vscode-color-blocks"
+	},
+	"version": "1.0.0",
 	"categories": [
 		"Other"
 	],
@@ -13,13 +18,13 @@
 		"range",
 		"annotate"
 	],
-	"license": "MIT",
+	"license": "SEE LICENSE IN LICENSE",
 	"engines": {
 		"vscode": "^1.65.0"
 	},
-	"icon": "/media/icon.png",
+	"icon": "media/icon.png",
 	"activationEvents": [
-		"*"
+		"onStartupFinished"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {

@@ -77,3 +77,7 @@ Could do:
 ### 0.0.0
 
 Pre release
+
+### 1.0.0
+
+First release 🥳 Straight out the oven baby!
