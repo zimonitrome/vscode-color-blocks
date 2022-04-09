@@ -66,13 +66,13 @@
 					"color-blocks.standardizeColorBrightness.background": {
 						"type": "number",
 						"default": 50,
-						"description": "Lumens value to use when standardizing background brightness.",
+						"description": "Lightness value to use when standardizing background brightness.",
 						"scope": "window"
 					},
 					"color-blocks.standardizeColorBrightness.commentText": {
 						"type": "number",
 						"default": 80,
-						"description": "Lumens value to use when standardizing brightness of the text of the first line of the colored block.",
+						"description": "Lightness value to use when standardizing brightness of the text of the first line of the color block.",
 						"scope": "window"
 					}
 				}
@@ -82,7 +82,7 @@
 				"properties": {
 					"color-blocks.border.width": {
 						"type": "string",
-						"default": "0.2ch",
+						"default": "0.3ch",
 						"description": "CSS border width.",
 						"scope": "window"
 					},

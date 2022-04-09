@@ -37,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
             let indention = getIndention(firstLineText, tabSize);
             // Currently no supported way to call existing snippets easily and add custom args?
             activeEditor.insertSnippet(
-                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX}," + nCommenLines.toString() + "}\n"),
+                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}}," + nCommenLines.toString() + "}\n"),
                 new vscode.Position(firstLine, indention),
                 { undoStopBefore: false, undoStopAfter: false }
             );

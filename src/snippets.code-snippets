@@ -4,7 +4,7 @@
       "color block"
     ],
     "body": [
-      "$LINE_COMMENT ${1} {#${2:$RANDOM_HEX},${3:1}}$0"
+      "$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}},${3:1}}$0"
     ],
     "description": "Color a range of lines."
   }
