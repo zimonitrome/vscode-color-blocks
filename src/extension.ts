@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { hexCodeRegex, hexToHsl, hslToHex } from './colorHelpers';
 import { CommentConfigHandler } from './commentConfigHandler';
+import { getIndention } from './documentHelpers';
 import { styleRange } from './styleRange';
 
 interface DecorationRange {
@@ -22,13 +23,25 @@ export function activate(context: vscode.ExtensionContext) {
     let activeEditor: vscode.TextEditor;
 
     let disposable = vscode.commands.registerCommand('color-block-comments.makeComment', () => {
-        // Currently no supported way to call existing snippets easily and add custom args?
-        const firstLine = Math.min(activeEditor.selection.end.line, activeEditor.selection.start.line);
-        const commenLines = Math.abs(activeEditor.selection.end.line - activeEditor.selection.start.line + 2);
-        activeEditor.insertSnippet(
-            new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX}," + commenLines.toString() + "}\n"),
-            new vscode.Position(firstLine, 0)
-        );
+        let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
+        let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
+        for (let selection of activeEditor.selections) {
+            let firstLine = Math.min(selection.end.line, selection.start.line);
+
+            for (let line of insertMap)
+                if (firstLine >= line) firstLine += 1;
+            insertMap.push(firstLine);
+
+            const nCommenLines = Math.abs(selection.end.line - selection.start.line + 2);
+            let firstLineText = activeEditor.document.lineAt(firstLine).text;
+            let indention = getIndention(firstLineText, tabSize);
+            // Currently no supported way to call existing snippets easily and add custom args?
+            activeEditor.insertSnippet(
+                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:$RANDOM_HEX}," + nCommenLines.toString() + "}\n"),
+                new vscode.Position(firstLine, indention),
+                { undoStopBefore: false, undoStopAfter: false }
+            );
+        }
     });
     context.subscriptions.push(disposable);
 
@@ -63,19 +76,18 @@ export function activate(context: vscode.ExtensionContext) {
                 continue;
             }
 
-            decorationRanges.forEach((decorationRange) => {
-
-                if (change.range.start.isAfterOrEqual(decorationRange.matchRange.end) && (change.range.start.line <= decorationRange.endLine)) {
-                    // Change range starts inside dec range
-                    const nLinesBeforeEdit = decorationRange.endLine - decorationRange.startLine + 1;
-                    decorationRange.endLine += diff;
-                    const nLinesAfter = decorationRange.endLine - decorationRange.startLine + 1;
-                    activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
+            activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
+                decorationRanges.forEach((decorationRange) => {
+                    if (change.range.start.isAfterOrEqual(decorationRange.matchRange.end) && (change.range.start.line <= decorationRange.endLine)) {
+                        // Change range starts inside dec range
+                        const nLinesBeforeEdit = decorationRange.endLine - decorationRange.startLine + 1;
+                        decorationRange.endLine += diff;
+                        const nLinesAfter = decorationRange.endLine - decorationRange.startLine + 1;
                         const editRange = decorationRange.matchLineArgRange;
                         editBuilder.replace(editRange, nLinesAfter.toString());
-                    }, { undoStopBefore: false, undoStopAfter: false });
-                }
-            });
+                    }
+                });
+            }, { undoStopBefore: false, undoStopAfter: false });
         }
     }
 

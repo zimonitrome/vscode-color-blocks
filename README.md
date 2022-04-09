@@ -42,9 +42,9 @@ Should do:
     * Then videos showing usage and different settings etc.
 * Test performance on slow PCs
     * Reduce update frequency
-* Fix select > Create comment beahvior
+* ~Fix select > Create comment beahvior~ Fixed?
 * ~Fix nested highlights~
-* Fix indentation comments
+* ~Fix indentation comments~
 * Read extension guidelines and make sure this repo follows them
 
 Could do:
@@ -58,6 +58,12 @@ Could do:
 * Support light theme better
     * Make comments lighter instead of brighter
         * Change settings and variable to not say "brighter"/"lighter"
+* Change wrap option to be separate for pre or post line. (shrink left and shrink right)
+* Fix overlapping ranges text colors.
+    * Currently the text looks bland as multiple ranges alpha blend.
+* Show ranges on minimap (is this possible?)
+* Fix overflowing lines stacking up at the end of a document
+* Fix don't extend ranges if it's the last line of the document
 
 ## Known Issues
 

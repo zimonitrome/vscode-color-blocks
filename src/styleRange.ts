@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { hexToHsl, hslToHex, decimalToHexString } from './colorHelpers';
+import { getIndention } from './documentHelpers';
 
 export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor, allDecorationTypes: any, settings: any) => {
     const nCommentLines = decorationRange.endLine - decorationRange.startLine + 1;
@@ -11,20 +12,28 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
         l = settings.standardizeColorBrightness.commentText;
     lighterHexColor = hslToHex(h, s, l);
 
-    let longestLineLength = 0;
-    for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++)
-        longestLineLength = Math.max(longestLineLength, activeEditor.document.lineAt(lineNr).text.length);
-
-    let customMarginRight!: string;
+    let left!: string;
     let customWidth!: string;
     if (settings.wrapText.enabled) {
+        let shortestIndentation = Infinity;
+        let longestLineLength = 0;
+        let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
+        for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++) {
+            let lineText = activeEditor.document.lineAt(lineNr).text;
+    
+            let indentation = getIndention(lineText, tabSize);
+            
+            shortestIndentation = Math.min(shortestIndentation, indentation);
+            longestLineLength = Math.max(longestLineLength, lineText.length);
+        }
+
         const padding = settings.wrapText.padding;
-        customMarginRight = `-${longestLineLength + padding}ch`;
-        customWidth = `${longestLineLength + padding}ch`;
+        left = `${shortestIndentation}ch`;
+        customWidth = `${longestLineLength - shortestIndentation + padding}ch`;
     }
     else {
         const scrollbarSize = vscode.workspace.getConfiguration('editor').scrollbar.verticalScrollbarSize;
-        customMarginRight = `calc(-100% + ${scrollbarSize}px)`;
+        left = `0`;
         customWidth = `calc(100% - ${scrollbarSize}px)`;
     }
 
@@ -63,7 +72,7 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
                     border-width: ${topWidth} ${settings.border.width} ${bottomWidth} ${settings.border.width};
                     border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
                     pointer-events: none;
-                    margin-right: ${customMarginRight};
+                    left: ${left};
                     box-sizing: border-box;
                     position: absolute;`,
                 contentText: " ",
