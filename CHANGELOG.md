@@ -1,3 +1,7 @@
+## [1.0.4]
+
+Bugfixes and removed logging.
+
 ## [1.0.3]
 
 Fixed snippet and added examples.
