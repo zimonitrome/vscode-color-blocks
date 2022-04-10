@@ -56,8 +56,6 @@ export function activate(context: vscode.ExtensionContext) {
     function updateCommentDelimmiter() {
         let commentConfig = commentConfigHandler.getCommentConfig(activeEditor.document.languageId);
         commentDelimmiter = commentConfig?.lineComment ?? "";
-        console.log("commentDelimmiter:");
-        console.log(commentDelimmiter);
     }
 
     function escapeRegex(string: string) {
@@ -100,8 +98,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         let text = activeEditor.document.getText();
         let regEx = new RegExp(String.raw`${escapeRegex(commentDelimmiter)}(.*){(.*?)}`, "ig");
-        console.log("regEx:");
-        console.log(regEx);
 
         let match: any;
         matchLoop:
