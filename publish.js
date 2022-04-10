@@ -12,16 +12,17 @@ if (!version)
 if (!message)
     message = "";
 
-let logFunction = (error, stdout, stderr) => {
-    console.log('stdout: ' + stdout);
-    console.log('stderr: ' + stderr);
-    if (error !== null) {
-        throw Error('exec error: ' + error);
-    }
-};
+let myExec = (command) => execSync(command,
+    (error, stdout, stderr) => {
+        console.log('stdout: ' + stdout.toString());
+        console.log('stderr: ' + stderr.toString());
+        if (error !== null) {
+            throw Error('exec error: ' + error.toString());
+        }
+    }, { encoding: "utf-8" });
 
 // Package
-execSync(`vsce package ${version}`, logFunction);
+myExec(`vsce package ${version}`);
 
 // Write to logfile
 let changeLogPath = './CHANGELOG.md';
@@ -32,12 +33,12 @@ let rows = fs.readFileSync(changeLogPath).toString().split('\n');
 rows.unshift(...changeLogRows);
 fs.writeFileSync(changeLogPath, rows.join('\n'));
 
-execSync(`git add ./CHANGELOG.md`, logFunction);
-execSync(`git commit --amend -m "${message}"`, logFunction);
+myExec(`git add ./CHANGELOG.md`);
+myExec(`git commit --amend -m "${message}"`);
 
 // Publish
-execSync(`vsce publish`, logFunction);
+myExec(`vsce publish`);
 
 // Push
-execSync(`git push`, logFunction);
-execSync(`git push --tags`, logFunction);
+myExec(`git push`);
+myExec(`git push --tags`);
