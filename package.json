@@ -1,7 +1,7 @@
 {
 	"name": "color-blocks",
 	"displayName": "Color Blocks",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Highlight ranges of code lines using comments.",
 	"publisher": "zimonitrome",
 	"repository": {
