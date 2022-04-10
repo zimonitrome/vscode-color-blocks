@@ -6,7 +6,7 @@ Add colorful comment ranges that span multiple lines. This makes it easier to un
 
 ## Motivation
 
-We as humans are very dependent on our vision to perform task. Programming is no different. I often find myself getting lost in long files of code. I want an extension that helps me navigate regions of similar looking code through
+We rely on our vision to navigate large code files. I often find myself getting lost when working with code bases of similar looking lines or ambiguous syntax. To navigate code files, we either normally read the syntax semantically, look at the macro shape of larger structures of lines, use comments (sometimes with dividers/other blocks), or use ctrl+f as we frantically scroll through our files. This extensions aims to help navigate and annotate code by providing colors to mark regions of files, making them distinguishable visually.
 
 ## Features & Settings
 
@@ -33,7 +33,7 @@ We as humans are very dependent on our vision to perform task. Programming is no
   By start writing `color block` and selecting it from the context menu suggestions.
 
 * **Command**  
-  By pressing <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> and selecing "Add Color Block". This command can be bound to a hotkey.
+  By pressing <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> and selecting "Add Color Block". This command can be bound to a hotkey.
 
 ![feature X](/media/how_to_add_blocks.gif)
 
