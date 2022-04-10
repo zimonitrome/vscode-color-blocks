@@ -1,3 +1,7 @@
+## [1.0.3]
+
+Fixed snippet and added examples.
+
 ## [1.0.2]
 
 Testing new publishing method.
