@@ -20,6 +20,8 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++) {
             let lineText = activeEditor.document.lineAt(lineNr).text;
+            
+            if (/^\s*$/.test(lineText)) continue; // If line is empty, skip
     
             let indentation = getIndention(lineText, tabSize);
             
