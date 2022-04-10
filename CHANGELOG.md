@@ -1,3 +1,7 @@
+## [1.0.5]
+
+Fixed empty row affecting wrapping.\\nUpdated readme.
+
 ## [1.0.4]
 
 Bugfixes and removed logging.
