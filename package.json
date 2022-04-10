@@ -166,7 +166,8 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint src --ext ts"
+		"lint": "eslint src --ext ts",
+		"deploy": "node ./publish.js"
 	},
 	"devDependencies": {
 		"@types/json5": "^2.2.0",

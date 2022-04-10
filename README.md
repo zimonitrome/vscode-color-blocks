@@ -57,17 +57,3 @@ Could do:
 * Block comments are not supported for the moment
 * Nested blocks currently look weird
 * Snippet/commands does not support indentation when wrapping
-
-## Release Notes
-
-### 1.0.1
-
-Bug fix: Extension not working for many lanuages.
-
-### 1.0.0
-
-First release 🥳 Straight out the oven baby!
-
-### 0.0.0
-
-Pre release

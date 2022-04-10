@@ -1,9 +1,11 @@
-# Change Log
+## [1.0.1]
 
-All notable changes to the "Color Blocks" extension will be documented in this file.
+Bug fix: Extension not working for many lanuages.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## [1.0.0]
 
-## [Unreleased]
+First release 🥳 Straight out the oven baby!
 
-- Initial release
+## [0.0.0]
+
+Pre release
