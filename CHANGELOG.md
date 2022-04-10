@@ -1,3 +1,11 @@
+## [1.0.2]
+
+Testing new publishing method.
+
+## [1.0.2]
+
+Testing new publishing method.
+
 ## [1.0.1]
 
 Bug fix: Extension not working for many lanuages.
