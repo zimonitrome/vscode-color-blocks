@@ -1,9 +1,9 @@
 name: vscode-market-publisher
 
 on:
-  push:
-    tags:
-      - "*"
+  release:
+    types:
+    - published
 
 jobs:
   release:
@@ -17,11 +17,8 @@ jobs:
         node-version: 14.x
     - name: Run npm Install 
       run: npm install
-    - name: Get the version
-      id: get_version
-      run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
     - name: Publish
-      run: npm run deploy -- $SOURCE_TAG
+      if: success()
+      run: vsce publish ${{ github.event.release.tag_name }}
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        SOURCE_TAG: ${{ steps.get_version.outputs.SOURCE_TAG }}
