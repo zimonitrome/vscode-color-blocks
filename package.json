@@ -9,7 +9,8 @@
 		"url": "https://github.com/zimonitrome/vscode-color-blocks"
 	},
 	"categories": [
-		"Other"
+		"Other",
+		"Snippets"
 	],
 	"keywords": [
 		"comments",

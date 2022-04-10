@@ -1,8 +1,9 @@
+// Imports {#cdd,4}
 var execSync = require('child_process').execSync;
 var fs = require('fs');
 var argv = require('minimist')(process.argv.slice(2));
 
-// Parsing
+// Parsing {#44b,9}
 let version = argv.version ?? argv._[0];
 let message = (argv.message ?? argv.description) ?? argv._[1];
 
@@ -21,10 +22,10 @@ let myExec = (command) => execSync(command,
         }
     }, { encoding: "utf-8" });
 
-// Package
+// Package {#be1,2}
 myExec(`vsce package ${version}`);
 
-// Write to logfile
+// Write to logfile {#be1,11}
 let changeLogPath = './CHANGELOG.md';
 let messageRows = message.split("\n");
 let changeLogRows = [`## [${version}]`, "", ...messageRows, ""];
@@ -36,9 +37,9 @@ fs.writeFileSync(changeLogPath, rows.join('\n'));
 myExec(`git add ./CHANGELOG.md`);
 myExec(`git commit --amend -m "${message}"`);
 
-// Publish
-myExec(`vsce publish`);
+// Publish {#be1,2}
+myExec(`vsce publish --baseImagesUrl https://raw.githubusercontent.com/zimonitrome/vscode-color-blocks/main`);
 
-// Push
+// Push {#be1,3}
 myExec(`git push`);
 myExec(`git push --tags`);

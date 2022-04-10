@@ -10,7 +10,7 @@ We as humans are very dependent on our vision to perform task. Programming is no
 
 Three different ways to add color blocks.
 
-![feature X](https://raw.githubusercontent.com/zimonitrome/vscode-color-blocks/main/media/basic_preview.gif)
+![feature X](/media/how_to_add_blocks.gif)
 
 ## Inspired by
 
@@ -50,6 +50,7 @@ Could do:
 * Show ranges on minimap (is this possible?)
 * Fix overflowing lines stacking up at the end of a document
 * Fix don't extend ranges if it's the last line of the document
+* Prevent last line break removal from shrinking block range
 
 ## Known Issues
 
