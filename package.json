@@ -7,7 +7,6 @@
 		"type": "git",
 		"url": "https://github.com/zimonitrome/vscode-color-blocks"
 	},
-	"version": "1.0.0",
 	"categories": [
 		"Other"
 	],
@@ -167,7 +166,7 @@
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
-		"deploy": "vsce publish --yarn"
+		"deploy": "vsce publish"
 	},
 	"devDependencies": {
 		"@types/json5": "^2.2.0",
