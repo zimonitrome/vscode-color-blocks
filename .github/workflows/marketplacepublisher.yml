@@ -1,19 +1,24 @@
 name: vscode-market-publisher
 
 on:
-  push:
-    branches:
-    - main
   release:
     types:
-    - created
+    - published
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Publish
-        if: success() && startsWith( github.ref, 'refs/tags/releases/') && matrix.os == 'ubuntu-latest'
-        run: npm run deploy
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - name: Run npm Install 
+      run: npm install
+    - name: Publish
+      if: success()
+      run: npx vsce publish ${{ github.event.release.tag_name }}
+      env:
+        VSCE_PAT: ${{ secrets.VSCE_PAT }}
