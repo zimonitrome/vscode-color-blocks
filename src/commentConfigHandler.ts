@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import JSON5 from 'json5';
 
 interface CommentConfig {
     lineComment?: string;
@@ -55,9 +56,8 @@ export class CommentConfigHandler {
         const content = fs.readFileSync(file, { encoding: 'utf8' });
 
         try {
-            // Using normal JSON because json5 behaved buggy.
-            // Might need JSON5 in the future to parse language jsons with comments.
-            const config = JSON.parse(content);
+            // Using JSON5 to parse language jsons with comments.
+            const config = JSON5.parse(content);
 
             this.commentConfig.set(languageCode, config.comments);
             return config.comments;
