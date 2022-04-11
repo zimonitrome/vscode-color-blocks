@@ -55,12 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     let settings = getSettings();
 
-    // {#88f,5}
-    function updateCommentDelimiter() {
-        let commentConfig = commentConfigHandler.getCommentConfig(activeEditor.document.languageId);
-        commentDelimiter = commentConfig?.lineComment ?? "";
-    }
-
     // Helper. Move? {#88f,4}
     function escapeRegex(string: string) {
         return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -139,15 +133,16 @@ export function activate(context: vscode.ExtensionContext) {
             let endLine = startLine + (nCommentLines ? nCommentLines - 1 : 0);
 
             let matchTextCommentRange = new vscode.Range(
-                matchStartPos.translate({lineDelta: commentDelimiter.length}),
-                matchStartPos.translate({lineDelta: commentDelimiter.length + matchTextComment.length})
+                new vscode.Position(startLine, matchStartPos.character + commentDelimiter.length),
+                new vscode.Position(startLine, matchStartPos.character + commentDelimiter.length + matchTextComment.length)
             );
 
             let linesArgOffset = /(?<=[\s,:])\d+/.exec(match[2])!.index + 1; // +1 for '{' in above match
 
             let matchLineArgRange = new vscode.Range(
-                matchTextCommentRange.start.translate({lineDelta: linesArgOffset}),
-                matchTextCommentRange.start.translate({lineDelta: linesArgOffset + nCommentLines.toString().length})
+                // matchTextCommentRange.end,
+                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset),
+                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset + nCommentLines.toString().length),
             );
 
             decorationRanges.push({
@@ -170,7 +165,6 @@ export function activate(context: vscode.ExtensionContext) {
         decorationRanges.forEach(decorationRange => {
             styleRange(decorationRange, activeEditor, allDecorationTypes, settings);
         });
-
     };
 
     // Handle active file changed {#ff0,5}
@@ -179,27 +173,26 @@ export function activate(context: vscode.ExtensionContext) {
         triggerUpdateDecorations();
     });
 
-    // Get the active editor for the first time and initialize the regex
-    if (vscode.window.activeTextEditor) {
-        activeEditor = vscode.window.activeTextEditor;
-        updateCommentDelimiter();
-        triggerUpdateDecorations();
-    }
-
-    // Handle active file changed {#ff0,9}
-    vscode.window.onDidChangeActiveTextEditor(editor => {
+    const editorChange = (editor: vscode.TextEditor | undefined) => {
         if (editor) {
+            // Update active editor
             activeEditor = editor;
-            updateCommentDelimiter();
-            decorationRanges = [];
+
+            // Update comment delimiter
+            let commentConfig = commentConfigHandler.getCommentConfig(activeEditor.document.languageId);
+            commentDelimiter = commentConfig?.lineComment ?? "";
+
             triggerUpdateDecorations();
         }
-    }, null, context.subscriptions);
+    };
+    // Get the active editor for the first time and initialize
+    editorChange(vscode.window.activeTextEditor);
+
+    // Handle active file changed {#ff0,9}
+    vscode.window.onDidChangeActiveTextEditor(editorChange);
 
     // Handle file contents changed {#ff0,13}
     vscode.workspace.onDidChangeTextDocument(event => {
-        // THIS IS VERY SLOW
-        // TODO: Call functions async?
         if (activeEditor && event.document === activeEditor.document) {
             if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
@@ -210,13 +203,23 @@ export function activate(context: vscode.ExtensionContext) {
             }
             triggerUpdateDecorations();
         }
-    }, null, context.subscriptions);
+    });
 
     // {#88f,6}
+    // * IMPORTANT:
+    // * To avoid calling update too often,
+    // * set a timer for 100ms to wait before drawing
+    // Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
+    var timeout: NodeJS.Timer;
     function triggerUpdateDecorations() {
-        decorationRanges = [];
-        addNewDecorationRanges();
-        redrawDecorationRanges();
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(async () => {
+            decorationRanges = [];
+            addNewDecorationRanges();
+            redrawDecorationRanges(); // This one takes a long time
+        }, 100);
     }
 }
 

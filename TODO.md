@@ -2,31 +2,33 @@
 
 Should do:
 * Fix extension being super slow with many comments (or long text)?
-* Enable block comments.
-* Finish readme.
-    * Videos showing usage and different settings etc.
+* Support block comments.
 * Test performance on slow PCs.
     * Reduce update frequency.
 * Add setting to toggle on/off.
 * Don't clear ranges when moving to another file.
 * Fix bug: Line copying (alt+up/down) creates undoStops
     * Extension can also not catch up if it is done too much. Why? Operations taking too long?
-* Only dim content inside comment.
+* Only dim content inside comment, not any code before the comment.
 
 Could do:
+* Command to convert current codes with comment on top to color block.
+    * Change current command to do this?
 * Change the syntax.
 * Make syntax configurable.
 * Add optional left bar.
 * Add optional pattern such as stripes to the background.
     * Set as 2nd argument.
-    * \# -> Boxes
-    * \## -> Gingham
-    * / -> Spaced stripes
-    * // -> Tight stripes
-    * w -> ZigZag/chevron
-    * . -> Polkadot
-    * [] -> Checkerboard
-    * <> -> Rhombus
+    * Good reference: https://www.magicpattern.design/tools/css-backgrounds
+    * Patterns:
+        * \# -> Boxes
+        * \## -> Gingham
+        * / -> Spaced stripes
+        * // -> Tight stripes
+        * w -> ZigZag/chevron
+        * . -> Polkadot
+        * [] -> Checkerboard
+        * <> -> Rhombus
 * Make comment text larger (like a title)
 * Setting to store color ranges in a separate file. For `myfile.py` a 2nd file `myfile.py.cbc` would be used.
 * Support light theme better.
