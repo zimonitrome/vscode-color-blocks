@@ -22,6 +22,7 @@ const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 export function activate(context: vscode.ExtensionContext) {
     let activeEditor: vscode.TextEditor;
 
+    // Add command {#cdf,23}
     let disposable = vscode.commands.registerCommand("color-blocks.add", () => {
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
@@ -31,13 +32,13 @@ export function activate(context: vscode.ExtensionContext) {
             for (let line of insertMap)
                 if (firstLine >= line) firstLine += 1;
             insertMap.push(firstLine);
-
-            const nCommenLines = Math.abs(selection.end.line - selection.start.line + 2);
+            
+            const nCommentLines = Math.abs(selection.end.line - selection.start.line + 2);
             let firstLineText = activeEditor.document.lineAt(firstLine).text;
             let indention = getIndention(firstLineText, tabSize);
             // Currently no supported way to call existing snippets easily and add custom args?
             activeEditor.insertSnippet(
-                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}}," + nCommenLines.toString() + "}\n"),
+                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}}," + nCommentLines.toString() + "}\n"),
                 new vscode.Position(firstLine, indention),
                 { undoStopBefore: false, undoStopAfter: false }
             );
@@ -45,27 +46,32 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(disposable);
 
+    // Function variables {#6d8,8}
     let decorationRanges: Array<DecorationRange> = [];
     let allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
     const commentConfigHandler = new CommentConfigHandler();
-    let commentDelimmiter = "";
+    let commentDelimiter = "";
 
     let settings = getSettings();
 
-    function updateCommentDelimmiter() {
+    // {#88f,5}
+    function updateCommentDelimiter() {
         let commentConfig = commentConfigHandler.getCommentConfig(activeEditor.document.languageId);
-        commentDelimmiter = commentConfig?.lineComment ?? "";
+        commentDelimiter = commentConfig?.lineComment ?? "";
     }
 
+    // Helper. Move? {#88f,4}
     function escapeRegex(string: string) {
         return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
 
+    // {#88f,30}
     function updateExistingDecorationRanges(contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         // If the user makes a change inside a decoration that results in a change of # of lines,
         // update the number listed inside the cbc braces.
         for (const change of contentChanges) {
+            // Get difference in lines {#4c0,10}
             const startLine = change.range.start.line;
             const endLine = change.range.end.line;
             const linesInRange = endLine - startLine;
@@ -91,33 +97,33 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    // Scan document for color blockS
+    // Scan document for color blockS {#88f,63}
     function addNewDecorationRanges(event: vscode.TextDocumentChangeEvent | undefined = undefined) {
         if (!activeEditor) return; // Needed?
-        if (!commentDelimmiter) return;
+        if (!commentDelimiter) return;
 
         let text = activeEditor.document.getText();
-        let regEx = new RegExp(String.raw`${escapeRegex(commentDelimmiter)}(.*){(.*?)}`, "ig");
+        let regEx = new RegExp(String.raw`${escapeRegex(commentDelimiter)}(.*){(.*?)}`, "ig");
 
         let match: any;
         matchLoop:
         while (match = regEx.exec(text)) {
-            // Add new decorationRange if it does not exist
+            // Add new decorationRange if it does not exist {#bee, 5}
             let matchStartPos = activeEditor.document.positionAt(match.index);
             let startLine = matchStartPos.line;
             let matchEndPos = new vscode.Position(startLine, matchStartPos.character + match[0].length);
             let matchRange = new vscode.Range(matchStartPos, matchEndPos);
 
-            // Found a previously defined range
+            // Found a previously defined range {#857, 6}
             for (let decorationRange of decorationRanges) {
                 if (decorationRange.startLine === startLine) {
                     continue matchLoop;
                 }
             }
 
-            // Extract relevant information from match
+            // Extract relevant information from match {#4ba, 13}
             const matchTextComment: string = match[1];
-            let values = match[2].split(',').map((keyvalue: string) => keyvalue.split(':').at(-1)!.replace(/ /g, ''));
+            let values = match[2].split(',').map((keyValuePair: string) => keyValuePair.split(':').at(-1)!.replace(/ /g, ''));
             if (values.length !== 2) continue; // Hard coded to accept 2 values for now
             let [hexColor, nCommentLines] = values;
             nCommentLines = parseInt(nCommentLines);
@@ -129,20 +135,19 @@ export function activate(context: vscode.ExtensionContext) {
                 l = settings.standardizeColorBrightness.background;
             hexColor = hslToHex(h, s, l);
 
-            // Save relevant ranges
+            // Save relevant ranges {#123, 23}
             let endLine = startLine + (nCommentLines ? nCommentLines - 1 : 0);
 
             let matchTextCommentRange = new vscode.Range(
-                new vscode.Position(startLine, matchStartPos.character + commentDelimmiter.length),
-                new vscode.Position(startLine, matchStartPos.character + commentDelimmiter.length + matchTextComment.length)
+                matchStartPos.translate({lineDelta: commentDelimiter.length}),
+                matchStartPos.translate({lineDelta: commentDelimiter.length + matchTextComment.length})
             );
 
             let linesArgOffset = /(?<=[\s,:])\d+/.exec(match[2])!.index + 1; // +1 for '{' in above match
 
             let matchLineArgRange = new vscode.Range(
-                // matchTextCommentRange.end,
-                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset),
-                new vscode.Position(startLine, matchTextCommentRange.end.character + linesArgOffset + nCommentLines.toString().length),
+                matchTextCommentRange.start.translate({lineDelta: linesArgOffset}),
+                matchTextCommentRange.start.translate({lineDelta: linesArgOffset + nCommentLines.toString().length})
             );
 
             decorationRanges.push({
@@ -156,6 +161,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }
 
+    // {#88f,11}
     function redrawDecorationRanges() {
         // Clear all decoration types
         allDecorationTypes.forEach(dt => dt.dispose());
@@ -167,30 +173,33 @@ export function activate(context: vscode.ExtensionContext) {
 
     };
 
+    // Handle active file changed {#ff0,5}
     vscode.workspace.onDidChangeConfiguration(event => {
         settings = getSettings();
         triggerUpdateDecorations();
     });
 
-    // Get the active editor for the first time and initialise the regex
+    // Get the active editor for the first time and initialize the regex
     if (vscode.window.activeTextEditor) {
         activeEditor = vscode.window.activeTextEditor;
-        updateCommentDelimmiter();
+        updateCommentDelimiter();
         triggerUpdateDecorations();
     }
 
-    // Handle active file changed
+    // Handle active file changed {#ff0,9}
     vscode.window.onDidChangeActiveTextEditor(editor => {
         if (editor) {
             activeEditor = editor;
-            updateCommentDelimmiter();
+            updateCommentDelimiter();
             decorationRanges = [];
             triggerUpdateDecorations();
         }
     }, null, context.subscriptions);
 
-    // Handle file contents changed
+    // Handle file contents changed {#ff0,13}
     vscode.workspace.onDidChangeTextDocument(event => {
+        // THIS IS VERY SLOW
+        // TODO: Call functions async?
         if (activeEditor && event.document === activeEditor.document) {
             if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
@@ -203,6 +212,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }, null, context.subscriptions);
 
+    // {#88f,6}
     function triggerUpdateDecorations() {
         decorationRanges = [];
         addNewDecorationRanges();
