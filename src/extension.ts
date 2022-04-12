@@ -16,27 +16,27 @@ interface DecorationRange {
     endLine: number;
 }
 
-// Helpers. Move? {#88f,4}
+// Helpers. Move? {#88f,3}
 const escapeRegex = (string: string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 
-let activeEditor: vscode.TextEditor;
-
-// Local variables {#6d8,8}
+// Local variables {#e77,10}
 let decorationRanges: Array<DecorationRange> = [];
 let allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
 const commentConfigHandler = new CommentConfigHandler();
 let commentDelimiter = "";
 
+let activeEditor: vscode.TextEditor;
+
 let settings = getSettings();
 
-// {#88f,30} TODO: Move?
+// {#88f,31} TODO: Move?
 const updateExistingDecorationRanges = (contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) => {
     // If the user makes a change inside a decoration that results in a change of # of lines,
     // update the number listed inside the cbc braces.
     for (const change of contentChanges) {
-        // Get difference in lines {#4c0,10}
+        // Get difference in lines {#3a3,10}
         const startLine = change.range.start.line;
         const endLine = change.range.end.line;
         const linesInRange = endLine - startLine;
@@ -47,6 +47,7 @@ const updateExistingDecorationRanges = (contentChanges: readonly vscode.TextDocu
             continue;
         }
 
+        // Make edits {#838,13}
         activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
             decorationRanges.forEach((decorationRange) => {
                 if (change.range.start.isAfterOrEqual(decorationRange.matchRange.end) && (change.range.start.line <= decorationRange.endLine)) {
@@ -62,7 +63,7 @@ const updateExistingDecorationRanges = (contentChanges: readonly vscode.TextDocu
     }
 };
 
-// Scan document for color blockS {#88f,63} TODO: Move?
+// Scan document for color blockS {#88f,64} TODO: Move?
 const addNewDecorationRanges = (event: vscode.TextDocumentChangeEvent | undefined = undefined) => {
     if (!activeEditor) return; // Needed?
     if (!commentDelimiter) return;
@@ -73,20 +74,20 @@ const addNewDecorationRanges = (event: vscode.TextDocumentChangeEvent | undefine
     let match: any;
     matchLoop:
     while (match = regEx.exec(text)) {
-        // Add new decorationRange if it does not exist {#bee, 5}
+        // Add new decorationRange if it does not exist {#beb, 5}
         let matchStartPos = activeEditor.document.positionAt(match.index);
         let startLine = matchStartPos.line;
         let matchEndPos = new vscode.Position(startLine, matchStartPos.character + match[0].length);
         let matchRange = new vscode.Range(matchStartPos, matchEndPos);
 
-        // Found a previously defined range {#857, 6}
+        // Found a previously defined range {#beb, 6}
         for (let decorationRange of decorationRanges) {
             if (decorationRange.startLine === startLine) {
                 continue matchLoop;
             }
         }
 
-        // Extract relevant information from match {#4ba, 13}
+        // Extract relevant information from match {#beb, 13}
         const matchTextComment: string = match[1];
         let values = match[2].split(',').map((keyValuePair: string) => keyValuePair.split(':').at(-1)!.replace(/ /g, ''));
         if (values.length !== 2) continue; // Hard coded to accept 2 values for now
@@ -100,7 +101,7 @@ const addNewDecorationRanges = (event: vscode.TextDocumentChangeEvent | undefine
             l = settings.standardizeColorBrightness.background;
         hexColor = hslToHex(h, s, l);
 
-        // Save relevant ranges {#123, 23}
+        // Save relevant ranges {#beb, 23}
         let endLine = startLine + (nCommentLines ? nCommentLines - 1 : 0);
 
         let matchTextCommentRange = new vscode.Range(
@@ -127,7 +128,7 @@ const addNewDecorationRanges = (event: vscode.TextDocumentChangeEvent | undefine
     }
 };
 
-// {#88f,11} TODO: Move?
+// {#88f,10} TODO: Move?
 const redrawDecorationRanges = () => {
     // Clear all decoration types
     allDecorationTypes.forEach(dt => dt.dispose());
@@ -151,7 +152,7 @@ const editorChange = (editor: vscode.TextEditor | undefined) => {
     }
 };
 
-// {#88f,6}
+// {#88f,16}
 // * IMPORTANT:
 // * To avoid calling update too often,
 // * set a timer for 100ms to wait before drawing
@@ -172,12 +173,12 @@ const triggerUpdateDecorations = () => {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    let settings = getSettings();
+    settings = getSettings();
 
     // Get the active editor for the first time and initialize
     editorChange(vscode.window.activeTextEditor);
 
-    // Add command {#cdf,23}
+    // Add command {#aca,22}
     context.subscriptions.push(vscode.commands.registerCommand("color-blocks.add", () => {
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
@@ -200,7 +201,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    // Handle active file changed {#ff0,9}
+    // Handle active file changed {#ff0,2}
     vscode.window.onDidChangeActiveTextEditor(editorChange);
 
     // Handle file contents changed {#ff0,13}

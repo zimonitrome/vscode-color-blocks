@@ -1,17 +1,17 @@
 ## TODO:
 
 Should do:
-* Fix extension being super slow with many comments (or long text)?
 * Support block comments.
 * Test performance on slow PCs.
-    * Reduce update frequency.
 * Add setting to toggle on/off.
 * Don't clear ranges when moving to another file.
 * Fix bug: Line copying (alt+up/down) creates undoStops
     * Extension can also not catch up if it is done too much. Why? Operations taking too long?
 * Only dim content inside comment, not any code before the comment.
+* Fix word wrap
 
 Could do:
+* Change expand on style range if possible
 * Command to convert current codes with comment on top to color block.
     * Change current command to do this?
 * Change the syntax.

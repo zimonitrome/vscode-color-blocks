@@ -76,11 +76,13 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
                     pointer-events: none;
                     left: ${left};
                     box-sizing: border-box;
-                    position: absolute;`,
-                contentText: " ",
+                    position: absolute;
+                `,
+                contentText: '',
                 width: customWidth,
                 height: "100%",
             },
+            height: "100%",
             textDecoration: `; position: relative;`,
             // Custom styling for top line only
             ...(isTopLine && {
