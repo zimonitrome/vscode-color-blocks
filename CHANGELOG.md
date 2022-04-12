@@ -1,3 +1,7 @@
+## [1.0.6]
+
+Improvements to performance.\\nThis does however make the blocks a little less responsive but has the added benefit of not lagging down the entire editor.
+
 ## [1.0.5]
 
 Fixed empty row affecting wrapping.\\nUpdated readme.

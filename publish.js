@@ -35,7 +35,7 @@ rows.unshift(...changeLogRows);
 fs.writeFileSync(changeLogPath, rows.join('\n'));
 
 myExec(`git add ./CHANGELOG.md`);
-myExec("git commit" + message.split('\n').map(s => ` -m ${s}`).join(''));
+myExec("git commit" + message.split('\n').map(s => ` -m "${s}"`).join(''));
 
 // Publish {#be1,2}
 myExec(`vsce publish --baseImagesUrl https://raw.githubusercontent.com/zimonitrome/vscode-color-blocks/main`);
