@@ -1,5 +1,3 @@
-export const hexCodeRegex = /^#([0-9a-f]{3}){1,2}$/i;
-
 // Modified from: https://css-tricks.com/converting-color-spaces-in-javascript/
 export function hexToHsl(hexColor: string) {
     // Convert hex to RGB first

@@ -2,31 +2,34 @@ import * as vscode from 'vscode';
 import { hexToHsl, hslToHex, decimalToHexString } from './colorHelpers';
 import { getIndention } from './documentHelpers';
 
-export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor, allDecorationTypes: any, settings: any) => {
-    const nCommentLines = decorationRange.endLine - decorationRange.startLine + 1;
+export const styleRange = (decorationRange: DecorationRange, activeEditor: vscode.TextEditor, allDecorationTypes: any, settings: any) => {    
+    // Optionally process the hexcolor and standardize it to a 6 character format
+    let [h, s, l] = hexToHsl(decorationRange.hexColor.content);
+    if (settings.standardizeColorBrightness.enabled)
+        l = settings.standardizeColorBrightness.background;
+    let hexColor = hslToHex(h, s, l);
 
-    let lighterHexColor = decorationRange.hexColor;
-
-    let [h, s, l] = hexToHsl(decorationRange.hexColor);
+    // Set an even lighter version of the hex color to use later
     if (settings.standardizeColorBrightness.enabled)
         l = settings.standardizeColorBrightness.commentText;
-    lighterHexColor = hslToHex(h, s, l);
+    let lighterHexColor = hslToHex(h, s, l);
 
     let left!: string;
     let customWidth!: string;
+    // Calculate minimum width if wrapping is enabled
     if (settings.wrapText.enabled) {
         let shortestIndentation = Infinity;
         let longestLineLength = 0;
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
-        for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++) {
-            let lineText = activeEditor.document.lineAt(lineNr).text;
-            
-            if (/^\s*$/.test(lineText)) continue; // If line is empty, skip
-    
-            let indentation = getIndention(lineText, tabSize);
-            
+        for (let lineNr = decorationRange.commentStartLine; lineNr <= decorationRange.endLine; lineNr++) {
+            let line = activeEditor.document.lineAt(lineNr);
+
+            if (line.isEmptyOrWhitespace) continue; // If line is empty, skip
+
+            let indentation = getIndention(line.text, tabSize);
+
             shortestIndentation = Math.min(shortestIndentation, indentation);
-            longestLineLength = Math.max(longestLineLength, lineText.length);
+            longestLineLength = Math.max(longestLineLength, line.text.length);
         }
 
         const padding = settings.wrapText.padding;
@@ -39,8 +42,8 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
         customWidth = `calc(100% - ${scrollbarSize}px)`;
     }
 
-    let backgroundHexColor = decorationRange.hexColor + decimalToHexString(255 * settings.background.opacity);
-    let borderHexColor = decorationRange.hexColor + decimalToHexString(255 * settings.border.opacity);
+    let backgroundHexColor = hexColor + decimalToHexString(255 * settings.background.opacity);
+    let borderHexColor = hexColor + decimalToHexString(255 * settings.border.opacity);
 
     // We must style each line individually because...
     // - Normally styling the entire line prevents us from setting a custom width
@@ -55,8 +58,9 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
     //   will not render if the line is not visible.
     // The only alternative that works robustly is to style each individual line using
     // the ::after/::before pseudoclass.
-    for (let lineNr = decorationRange.startLine; lineNr <= decorationRange.endLine; lineNr++) {
-        let isTopLine = lineNr === decorationRange.startLine;
+    for (let lineNr = decorationRange.commentStartLine; lineNr <= decorationRange.endLine; lineNr++) {
+        let isTopLine = lineNr === decorationRange.commentStartLine;
+        let isCommentLine = lineNr < decorationRange.codeStartLine; // NOTE: this only accounts for the comment that has the color block argument in it
         let isBottomLine = lineNr === decorationRange.endLine;
         let topRadius = isTopLine ? settings.border.radius : 0;
         let bottomRadius = isBottomLine ? settings.border.radius : 0;
@@ -82,12 +86,8 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
                 width: customWidth,
                 height: "100%",
             },
-            height: "100%",
+            // height: "100%",
             textDecoration: `; position: relative;`,
-            // Custom styling for top line only
-            ...(isTopLine && {
-                ...(settings.commentLine.color && { color: lighterHexColor }),
-            })
         });
         activeEditor.setDecorations(
             midLineDecor,
@@ -99,22 +99,32 @@ export const styleRange = (decorationRange: any, activeEditor: vscode.TextEditor
     // Style comment text
     let commentDecorationType = vscode.window.createTextEditorDecorationType({
         fontWeight: settings.commentLine.commentFontWeight,
-        opacity: "1.0"
+        opacity: "1.0",
+        ...(settings.commentLine.color && { color: lighterHexColor })
+        // textDecoration: `; font-size: 300%; vertical-align:top; line-height: 100%; z-index: 1;`
+        // textDecoration: `; font-size: 170%; vertical-align:middle; z-index: 1;` // <-- good one
     });
     activeEditor.setDecorations(
         commentDecorationType,
-        [decorationRange.matchTextCommentRange]
+        [new vscode.Range(
+            activeEditor.document.positionAt(decorationRange.comment.range[0]),
+            activeEditor.document.positionAt(decorationRange.comment.range[1])
+        )]
     );
     allDecorationTypes.push(commentDecorationType);
 
-    // Style cbc args
+    // Style cb args
     let keywordDecorationType = vscode.window.createTextEditorDecorationType({
         opacity: settings.commentLine.lineOpacity.toString()
     });
     activeEditor.setDecorations(
         keywordDecorationType,
         // [decorationRange.matchCbcArgsRange]
-        [activeEditor.document.lineAt(decorationRange.startLine).range]
+        // [activeEditor.document.lineAt(decorationRange.startLine).range]
+        [new vscode.Range(
+            activeEditor.document.positionAt(decorationRange.argumentBlock.range[0]),
+            activeEditor.document.positionAt(decorationRange.argumentBlock.range[1])
+        )]
     );
     allDecorationTypes.push(keywordDecorationType);
 

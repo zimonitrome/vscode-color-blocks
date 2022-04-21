@@ -1,0 +1,23 @@
+TODO: Make this file part of a test that tests the regex
+
+VALID:
+{#abc,2}
+{#123456,2}
+{color:#123,2}
+{color:#123,lines:2}
+{#123,lines:2}
+{ #123 , 2 }
+{ color : #123 , lines : 2 }
+{ color : #123 }
+{#abc}
+
+INVALID
+{#abg,2}
+{#abg,k}
+{#ab,2}
+{#31,2}
+{test:#123,test:2}
+{"color":#123,"lines":2}
+{color:"#123",lines:"2"}
+{ lines : 2 }
+{,lines:2}
