@@ -12,6 +12,8 @@ We rely on our vision to navigate large code files. I often find myself getting 
 
 ### Syntax
 
+This extension will look for curly brackets inside comments containing at least a hex color argument.
+
 ```
 # MyColorBlock {#f9e, 4}
 |       |         |   |

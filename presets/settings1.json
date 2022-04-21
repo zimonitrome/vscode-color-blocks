@@ -1,0 +1,11 @@
+{
+    "editor.minimap.renderCharacters": false,
+    "color-blocks.wrapText.padding": 0,
+    "color-blocks.standardizeColorBrightness.enabled": true,
+    "color-blocks.standardizeColorBrightness.background": 60,
+    "color-blocks.border.opacity": 0.8,
+    "color-blocks.border.width": "0.2ch",
+    "color-blocks.border.radius": "0.5ch",
+    "color-blocks.background.opacity": 0.05,
+    "color-blocks.commentLine.commentFontWeight": "normal"
+}
