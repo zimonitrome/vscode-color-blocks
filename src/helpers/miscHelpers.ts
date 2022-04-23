@@ -1,3 +1,5 @@
+import { Range } from "vscode";
+
 // From: https://stackoverflow.com/a/44622467/7829241
 export const defaultDict = new Proxy({}, {
     get: (target: any, name) => name in target ? target[name] : 0
@@ -18,3 +20,5 @@ export const getIndention = (lineText: string, tabSize = 4) => {
     let indentation = tabSize*nLeadingTabs + nLeadingSpaces;
     return indentation;
 };
+
+export const rangeToString = (range: Range) => `[(L ${range.start.line}: C ${range.start.character}) -> (L ${range.end.line}: C ${range.end.character})]`;
