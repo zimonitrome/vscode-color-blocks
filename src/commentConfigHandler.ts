@@ -5,12 +5,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 import JSON5 from 'json5';
 
-interface CommentConfig {
+// Custom types
+export interface CommentConfig {
     lineComment?: string;
     blockComment?: [string, string];
 }
 
-interface Comment {
+export interface Comment {
     range: [number, number];
     startDelimiter: string;
     content: string;
@@ -99,7 +100,7 @@ export class CommentConfigHandler {
 
         const text = document.getText();
 
-        let match: RegExpExecArray | null;
+        let match: globalThis.RegExpExecArray | null;
         let matches: Array<Comment> = [];
         while (match = this.regex.exec(text)) {
             matches.push({
