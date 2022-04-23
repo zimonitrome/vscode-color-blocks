@@ -22,8 +22,8 @@ let settings = getSettings();
 // {#88f,31} TODO: Move?
 const updateExistingDecorationRanges = (contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) => {
     const doc = activeEditor.document;
-    const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount-1).range.end);
-    
+    const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);
+
     // If the user makes a change inside a decoration that results in a change of # of lines,
     // update the number listed inside the cbc braces.
     for (const change of contentChanges) {
@@ -56,10 +56,13 @@ const updateExistingDecorationRanges = (contentChanges: readonly vscode.TextDocu
                     // Change range starts inside dec range
                     decorationRange.endLine += diff;
                     const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
-                    const editRange = new vscode.Range(
-                        doc.positionAt(decorationRange.nLines.range[0]),
-                        doc.positionAt(decorationRange.nLines.range[1])
-                    );
+                    const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines.range[0]));
+                    // ^^ NOTE: This works so much better than using the range in "decorationRange".
+                    //          Maybe we don't need to store all those ranges?
+
+                    if (!editRange)
+                        return;
+
                     editBuilder.replace(editRange, nLinesNew.toString());
                 }
             });

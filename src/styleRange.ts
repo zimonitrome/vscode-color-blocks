@@ -22,7 +22,7 @@ export const styleRange = (decorationRange: DecorationRange, activeEditor: vscod
         let longestLineLength = 0;
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         for (let lineNr = decorationRange.commentStartLine; lineNr <= decorationRange.endLine; lineNr++) {
-            let line = activeEditor.document.lineAt(lineNr);
+            let line = activeEditor.document.lineAt(lineNr); // TODO: This will throw an error if an argument specifies too many lines. Maybe loop to min(enline, lastLineOfDocument).
 
             if (line.isEmptyOrWhitespace) continue; // If line is empty, skip
 
