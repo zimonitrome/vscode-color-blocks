@@ -8,7 +8,7 @@ Should do:
 * Add setting to toggle on/off.
 * Don't clear ranges when moving to another file.
 * Fix bug: Line copying (alt+up/down) creates undoStops
-    * Extension can also not catch up if it is done too much. Why? Operations taking too long?
+    * ~~Extension can also not catch up if it is done too much. Why? Operations taking too long?~~
 * ~~Only dim content inside comment, not any code before the comment.~~
 * Fix word wrap
 
