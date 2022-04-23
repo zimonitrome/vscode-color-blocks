@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Get the active editor for the first time and initialize
     editorChange(vscode.window.activeTextEditor);
 
-    // Add command {#aca,22}
+    // Add command {#aca,22} TODO: Maybe move to another file?
     context.subscriptions.push(vscode.commands.registerCommand("color-blocks.add", () => {
         let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         let insertMap: Array<number> = []; // Used to track line offsets for multiple selections

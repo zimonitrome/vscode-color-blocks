@@ -10,7 +10,7 @@ interface ContentRange {
 }
 
 interface DecorationRange {
-    comment: ContentRange;
+    comment: Comment;
     argumentBlock: ContentRange;
     hexColor: ContentRange;
     nLines?: ContentRange;
@@ -24,7 +24,7 @@ export class DecorationRangeHandler {
     public decorationRanges: Array<DecorationRange> = [];
     private allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
-    // {#88f,10} TODO: Move?
+    // {#88f,10}
     public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
         // Clear all decoration types
         this.allDecorationTypes.forEach(dt => dt.dispose());
@@ -35,7 +35,7 @@ export class DecorationRangeHandler {
         });
     };
 
-    // {#88f,31} TODO: Move?
+    // {#88f,31}
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         const doc = activeEditor.document;
         const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);
@@ -67,7 +67,8 @@ export class DecorationRangeHandler {
                         return;
 
                     const commentEnd = doc.positionAt(decorationRange.comment.range[0]);
-                    // If edit was made after the comment and before the end of the range
+                    // If edit was made after the comment and before the end of the range`
+                    // vv TODO: Maybe need to check change.end also: If the user selects text (start: after end: inside) this won't work.
                     if (change.range.start.isAfterOrEqual(commentEnd) && (change.range.start.line <= decorationRange.endLine)) {
                         // Change range starts inside dec range
                         decorationRange.endLine += diff;
@@ -86,7 +87,7 @@ export class DecorationRangeHandler {
         }
     };
 
-    // Scan document for color blockS {#88f,65} TODO: Move?
+    // Scan document for color blockS {#88f,65}
     public addNewDecorationRanges(activeEditor: vscode.TextEditor, comments: Comment[]) {
         if (!activeEditor) return; // Needed?
         const doc = activeEditor.document;
@@ -146,7 +147,9 @@ export class DecorationRangeHandler {
         }
     };
 
-    private styleRange(decorationRange: DecorationRange, activeEditor: vscode.TextEditor, settings: any) {
+    private styleRange(decorationRange: DecorationRange, editor: vscode.TextEditor, settings: any) {
+        const doc = editor.document;
+
         // Optionally process the hexcolor and standardize it to a 6 character format
         let [h, s, l] = hexToHsl(decorationRange.hexColor.content);
         if (settings.standardizeColorBrightness.enabled)
@@ -160,13 +163,16 @@ export class DecorationRangeHandler {
 
         let left!: string;
         let customWidth!: string;
+
+        const endLine = Math.min(decorationRange.endLine, doc.lineCount-1);
+
         // Calculate minimum width if wrapping is enabled
         if (settings.wrapText.enabled) {
             let shortestIndentation = Infinity;
             let longestLineLength = 0;
             let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
-            for (let lineNr = decorationRange.commentStartLine; lineNr <= decorationRange.endLine; lineNr++) {
-                let line = activeEditor.document.lineAt(lineNr); // TODO: This will throw an error if an argument specifies too many lines. Maybe loop to min(enline, lastLineOfDocument).
+            for (let lineNr = decorationRange.commentStartLine; lineNr <= endLine; lineNr++) {
+                let line = doc.lineAt(lineNr);
 
                 if (line.isEmptyOrWhitespace) continue; // If line is empty, skip
 
@@ -202,10 +208,9 @@ export class DecorationRangeHandler {
         //   will not render if the line is not visible.
         // The only alternative that works robustly is to style each individual line using
         // the ::after/::before pseudoclass.
-        for (let lineNr = decorationRange.commentStartLine; lineNr <= decorationRange.endLine; lineNr++) {
+        for (let lineNr = decorationRange.commentStartLine; lineNr <= endLine; lineNr++) {
             let isTopLine = lineNr === decorationRange.commentStartLine;
-            let isCommentLine = lineNr < decorationRange.codeStartLine; // NOTE: this only accounts for the comment that has the color block argument in it
-            let isBottomLine = lineNr === decorationRange.endLine;
+            let isBottomLine = lineNr === endLine;
             let topRadius = isTopLine ? settings.border.radius : 0;
             let bottomRadius = isBottomLine ? settings.border.radius : 0;
             let topWidth = isTopLine ? settings.border.width : 0;
@@ -218,59 +223,79 @@ export class DecorationRangeHandler {
                 before: {
                     backgroundColor: backgroundHexColor,
                     textDecoration: `;
-                    border: 0px ${settings.border.style} ${borderHexColor};
-                    border-width: ${topWidth} ${settings.border.width} ${bottomWidth} ${settings.border.width};
-                    border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
-                    pointer-events: none;
-                    left: ${left};
-                    box-sizing: border-box;
-                    position: absolute;
+                        border: 0px ${settings.border.style} ${borderHexColor};
+                        border-width: ${topWidth} ${settings.border.width} ${bottomWidth} ${settings.border.width};
+                        border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
+                        pointer-events: none;
+                        left: ${left};
+                        box-sizing: border-box;
+                        position: absolute;
                 `,
                     contentText: '',
                     width: customWidth,
                     height: "100%",
                 },
-                // height: "100%",
                 textDecoration: `; position: relative;`,
             });
-            activeEditor.setDecorations(
+            editor.setDecorations(
                 midLineDecor,
                 [new vscode.Range(new vscode.Position(lineNr, 0), new vscode.Position(lineNr, 1))]
             );
             this.allDecorationTypes.push(midLineDecor);
         }
 
-        // Style comment text
-        let commentDecorationType = vscode.window.createTextEditorDecorationType({
+        // Define relevant ranges
+        const comment = decorationRange.comment;
+        const entireCommentRange = new vscode.Range(
+            doc.positionAt(comment.range[0]),
+            doc.positionAt(comment.range[1])
+        );
+        const startDelimiterRange = new vscode.Range(
+            entireCommentRange.start,
+            doc.positionAt(comment.range[0] + comment.startDelimiter.length)
+        );
+        const endDelimiterRange = new vscode.Range(
+            doc.positionAt(comment.range[1] - comment.endDelimiter.length),
+            entireCommentRange.end
+        );
+        const agumentBlockRange = new vscode.Range(
+            doc.positionAt(decorationRange.argumentBlock.range[0]),
+            doc.positionAt(decorationRange.argumentBlock.range[1])
+        );
+        const textRanges = [
+            new vscode.Range(startDelimiterRange.end, agumentBlockRange.start),
+            new vscode.Range(agumentBlockRange.end, endDelimiterRange.start),
+        ];
+
+        // Style relevant comment text
+        let keywordDecorationType = vscode.window.createTextEditorDecorationType({
             fontWeight: settings.commentLine.commentFontWeight,
             opacity: "1.0",
-            ...(settings.commentLine.color && { color: lighterHexColor })
-            // textDecoration: `; font-size: 300%; vertical-align:top; line-height: 100%; z-index: 1;`
-            // textDecoration: `; font-size: 170%; vertical-align:middle; z-index: 1;` // <-- good one
+            ...(settings.commentLine.largeText && {
+                textDecoration: `; 
+                    font-size: 170%;
+                    vertical-align:middle;
+                    z-index: 1;
+                    font-family: sans-serif;`
+            })
         });
-        activeEditor.setDecorations(
-            commentDecorationType,
-            [new vscode.Range(
-                activeEditor.document.positionAt(decorationRange.comment.range[0]),
-                activeEditor.document.positionAt(decorationRange.comment.range[1])
-            )]
-        );
-        this.allDecorationTypes.push(commentDecorationType);
-
-        // Style cb args
-        let keywordDecorationType = vscode.window.createTextEditorDecorationType({
-            opacity: settings.commentLine.lineOpacity.toString()
-        });
-        activeEditor.setDecorations(
+        editor.setDecorations(
             keywordDecorationType,
-            // [decorationRange.matchCbcArgsRange]
-            // [activeEditor.document.lineAt(decorationRange.startLine).range]
-            [new vscode.Range(
-                activeEditor.document.positionAt(decorationRange.argumentBlock.range[0]),
-                activeEditor.document.positionAt(decorationRange.argumentBlock.range[1])
-            )]
+            textRanges
         );
         this.allDecorationTypes.push(keywordDecorationType);
+
+        // Style rest of the comment text
+        let commentDecorationType = vscode.window.createTextEditorDecorationType({
+            fontWeight: "normal",
+            opacity: settings.commentLine.lineOpacity.toString(),
+            ...(settings.commentLine.color && { color: lighterHexColor }),
+        });
+        editor.setDecorations(
+            commentDecorationType,
+            [entireCommentRange]
+        );
+        this.allDecorationTypes.push(commentDecorationType);
 
     };
 

@@ -143,6 +143,12 @@
 						"default": "bold",
 						"description": "CSS font-weight of the main comment text.",
 						"scope": "window"
+					},
+					"color-blocks.commentLine.largeText": {
+						"type": "boolean",
+						"default": false,
+						"description": "Make the main comment text larger and in a sans serif font.",
+						"scope": "window"
 					}
 				}
 			},
