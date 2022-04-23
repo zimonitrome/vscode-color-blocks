@@ -27,4 +27,4 @@ const regexString = mulitlineRegex`
 }                                           // End of color block arguments
 `;
 
-export const colorBlockRegex = new RegExp(regexString, 'd');
+export const colorBlockRegex = new RegExp(regexString, 'd'); // 'd' flag is used to get ranges of named match groups.

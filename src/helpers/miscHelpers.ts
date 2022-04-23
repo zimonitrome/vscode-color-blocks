@@ -9,3 +9,12 @@ export const strip = (s: string) => s.replace(/ /g, '');
 export const zip = (rows: Array<Array<any>>) => rows[0].map((_, c) => rows.map(row => row[c]));
 
 export const arrAdd = (array: Array<number>, value: number) => array.map(a => a + value);
+
+export const getIndention = (lineText: string, tabSize = 4) => {
+    // Better way to do this?
+    let leadingWhitespace = /^\s*/.exec(lineText)![0];
+    let nLeadingTabs = leadingWhitespace.split('\t').length - 1;
+    let nLeadingSpaces = leadingWhitespace.split(' ').length - 1;
+    let indentation = tabSize*nLeadingTabs + nLeadingSpaces;
+    return indentation;
+};
