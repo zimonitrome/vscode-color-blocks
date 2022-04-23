@@ -4,14 +4,13 @@ const clean = (piece: string) => (piece
     .replace(/((^|\n)(?:[^\/\\]|\/[^\/]|\\.)*?)\s*\/\/[^\n]*/g, '$1')
     .replace(/\n\s*/g, '')
 );
-const regex = ({ raw }: TemplateStringsArray, ...interpolations: string[] ) => (
-    new RegExp(interpolations.reduce(
+const mulitlineRegex = ({ raw }: TemplateStringsArray, ...interpolations: string[]) =>
+    interpolations.reduce(
         (regex, insert, index) => (regex + insert + clean(raw[index + 1])),
         clean(raw[0])
-    ), 'dg')
-);
+    );
 
-export const colorBlockRegex = regex`
+const regexString = mulitlineRegex`
 {                                           // Start of color block arguments
 \s*
     (?:                                     // Mandatory argument:
@@ -27,3 +26,5 @@ export const colorBlockRegex = regex`
 \s*
 }                                           // End of color block arguments
 `;
+
+export const colorBlockRegex = new RegExp(regexString, 'd');
