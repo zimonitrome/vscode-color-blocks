@@ -21,4 +21,4 @@ export const getIndention = (lineText: string, tabSize = 4) => {
     return indentation;
 };
 
-export const rangeToString = (range: Range) => `[(L ${range.start.line}: C ${range.start.character}) -> (L ${range.end.line}: C ${range.end.character})]`;
+export const rangeToString = (range: Range) => `[${range.start.line} ${range.start.character} -> ${range.end.line} ${range.end.character}]`;

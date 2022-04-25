@@ -36,9 +36,11 @@ const triggerUpdateDecorations = () => {
         clearTimeout(timeout);
     }
     timeout = setTimeout(async () => {
-        const comments = commentConfigHandler.getComments(activeEditor.document);
         decorationRangeHandler.decorationRanges = [];
-        decorationRangeHandler.addNewDecorationRanges(activeEditor, comments);
+        if (settings.behavior.enabled) {
+            const comments = commentConfigHandler.getComments(activeEditor.document);
+            decorationRangeHandler.addNewDecorationRanges(activeEditor, comments);
+        }
         decorationRangeHandler.redrawDecorationRanges(activeEditor, settings); // This one takes a long time
     }, 100);
 };
@@ -74,6 +76,10 @@ export function activate(context: vscode.ExtensionContext) {
             );
         }
     }));
+
+    context.subscriptions.push(vscode.commands.registerCommand("color-blocks.toggle", () => 
+        settings.update("behavior.enabled", !settings.behavior.enabled)
+    ));
 
     // Handle active file changed {#ff0,2}
     vscode.window.onDidChangeActiveTextEditor(editorChange);

@@ -32,7 +32,11 @@
 		"commands": [
 			{
 				"command": "color-blocks.add",
-				"title": "Add Color Block"
+				"title": "Add Color Block."
+			},
+			{
+				"command": "color-blocks.toggle",
+				"title": "Toggle enable/disable color blocks."
 			}
 		],
 		"snippets": [
@@ -159,6 +163,12 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Automatically update color blocks when lines are added/removed inside its range.",
+						"scope": "window"
+					},
+					"color-blocks.behavior.enabled": {
+						"type": "boolean",
+						"default": true,
+						"description": "Toggle showing color blocks.",
 						"scope": "window"
 					}
 				}

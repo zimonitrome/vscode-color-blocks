@@ -6,9 +6,10 @@ Should do:
 * ~~Fix comment color (some of it should be dimmed)~~
 * Test performance on slow PCs.
     * ~~It is still kinda laggy even on a good PC... why?~~
-* Add setting to toggle on/off.
+* ~~Add setting to toggle on/off.~~
 * Don't clear ranges when moving to another file.
 * Fix bug: Line copying (alt+up/down) creates undoStops
+    * LOTS OF STUFF CREATES UNDOSTOPS! WHY??? WHY VSCODE?????
     * ~~Extension can also not catch up if it is done too much. Why? Operations taking too long?~~
 * ~~Only dim content inside comment, not any code before the comment.~~
 * ~~Fix word wrap~~
