@@ -35,6 +35,22 @@ export class DecorationRangeHandler {
         });
     };
 
+    private async makeReplaceEdit(range: vscode.Range, text: string, maxRetries = 10) {
+        for (let i = 0; i <= maxRetries; i++) {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) return;
+
+            const success = await editor.edit(editBuilder => {
+                editBuilder.replace(
+                    range,
+                    text
+                );
+            }, { undoStopBefore: false, undoStopAfter: false });
+
+            if (success) break;
+        }
+    };
+
     // {#88f,31}
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         const doc = activeEditor.document;
@@ -48,7 +64,7 @@ export class DecorationRangeHandler {
             const endLine = change.range.end.line;
             const linesInRange = endLine - startLine;
             const linesInserted = change.text.split("\n").length - 1; // TODO?: Maybe need to check doc.eol instead?
-            const diff = linesInserted - linesInRange;
+            let diff = linesInserted - linesInRange;
 
             // Lines didn't change
             if (diff === 0)
@@ -59,31 +75,37 @@ export class DecorationRangeHandler {
             if (documentEndOffset === predictedCursorPosition)
                 continue;
 
-            // Make edits {#838,13}
-            activeEditor.edit((editBuilder: vscode.TextEditorEdit) => {
-                this.decorationRanges.forEach((decorationRange) => {
-                    // No lines given, skip
-                    if (!decorationRange.nLines)
-                        return;
+            for (const decorationRange of this.decorationRanges) {
+                // No lines given, skip
+                if (!decorationRange.nLines)
+                    continue;
 
-                    const commentEnd = doc.positionAt(decorationRange.comment.range[0]);
-                    // If edit was made after the comment and before the end of the range`
-                    // vv TODO: Maybe need to check change.end also: If the user selects text (start: after end: inside) this won't work.
-                    if (change.range.start.isAfterOrEqual(commentEnd) && (change.range.start.line <= decorationRange.endLine)) {
-                        // Change range starts inside dec range
-                        decorationRange.endLine += diff;
-                        const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
-                        const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines.range[0]));
-                        // ^^ NOTE: This works so much better than using the range in "decorationRange".
-                        //          Maybe we don't need to store all those ranges?
+                const decorationCodeRange = new vscode.Range(
+                    doc.lineAt(decorationRange.codeStartLine).range.start,
+                    doc.lineAt(decorationRange.endLine).range.end,
+                );
 
-                        if (!editRange)
-                            return;
+                // If edit was made after the comment and before the end of the range`
+                if (decorationCodeRange.contains(change.range.start)) {
+                    // Change range starts inside dec range
 
-                        editBuilder.replace(editRange, nLinesNew.toString());
+                    if (diff < 0) {
+                        const intersection = change.range.intersection(decorationCodeRange)!;
+                        diff = intersection.start.line - intersection.end.line + (linesInserted);
                     }
-                });
-            }, { undoStopBefore: false, undoStopAfter: false });
+                    decorationRange.endLine += diff;
+                    const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
+                    const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines.range[0]));
+                    // ^^ NOTE: This works so much better than using the range in "decorationRange".
+                    //          Maybe we don't need to store all those ranges?
+
+                    if (!editRange)
+                        continue;
+
+                    // Make edits {#838,1}
+                    this.makeReplaceEdit(editRange, nLinesNew.toString(), 200);
+                }
+            }
         }
     };
 
@@ -164,7 +186,7 @@ export class DecorationRangeHandler {
         let left!: string;
         let customWidth!: string;
 
-        const endLine = Math.min(decorationRange.endLine, doc.lineCount-1);
+        const endLine = Math.min(decorationRange.endLine, doc.lineCount - 1);
 
         // Calculate minimum width if wrapping is enabled
         if (settings.wrapText.enabled) {
