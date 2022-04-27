@@ -51,7 +51,6 @@ export class DecorationRangeHandler {
         }
     };
 
-    // {#88f,31}
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         const doc = activeEditor.document;
         const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);
@@ -59,48 +58,33 @@ export class DecorationRangeHandler {
         // If the user makes a change inside a decoration that results in a change of # of lines,
         // update the number listed inside the cbc braces.
         for (const change of contentChanges) {
-            // Get difference in lines {#3a3,10}
-            const startLine = change.range.start.line;
-            const endLine = change.range.end.line;
-            const linesInRange = endLine - startLine;
-            const linesInserted = change.text.split("\n").length - 1; // TODO?: Maybe need to check doc.eol instead?
-            let diff = linesInserted - linesInRange;
-
-            // Lines didn't change
-            if (diff === 0)
-                continue;
+            const linesInserted = change.text.split("\n").length - 1;
 
             // Skip edit at the very end of the document
             const predictedCursorPosition = doc.offsetAt(change.range.end) + change.text.length;
-            if (documentEndOffset === predictedCursorPosition)
-                continue;
+            if (documentEndOffset === predictedCursorPosition) continue;
 
             for (const decorationRange of this.decorationRanges) {
                 // No lines given, skip
-                if (!decorationRange.nLines)
-                    continue;
+                if (!decorationRange.nLines) continue;
 
-                const decorationCodeRange = new vscode.Range(
-                    doc.lineAt(decorationRange.codeStartLine).range.start,
-                    doc.lineAt(decorationRange.endLine).range.end,
-                );
-
-                // If edit was made after the comment and before the end of the range`
-                if (decorationCodeRange.contains(change.range.start)) {
+                // If edit was made after the comment and before the end of the range
+                if (change.range.start.line >= decorationRange.codeStartLine && decorationRange.endLine >= change.range.start.line) {
                     // Change range starts inside dec range
 
-                    if (diff < 0) {
-                        const intersection = change.range.intersection(decorationCodeRange)!;
-                        diff = intersection.start.line - intersection.end.line + (linesInserted);
-                    }
+                    const nIntersectingLines = (
+                        Math.min(decorationRange.endLine, change.range.end.line)
+                        - Math.max(decorationRange.codeStartLine, change.range.start.line)
+                    );
+                    const diff = linesInserted - nIntersectingLines;
+
                     decorationRange.endLine += diff;
                     const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
                     const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines.range[0]));
                     // ^^ NOTE: This works so much better than using the range in "decorationRange".
                     //          Maybe we don't need to store all those ranges?
 
-                    if (!editRange)
-                        continue;
+                    if (!editRange) continue;
 
                     // Make edits {#838,1}
                     this.makeReplaceEdit(editRange, nLinesNew.toString(), 200);
