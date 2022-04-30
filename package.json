@@ -1,7 +1,7 @@
 {
 	"name": "color-blocks",
 	"displayName": "Color Blocks",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"description": "Highlight ranges of code lines using comments.",
 	"publisher": "zimonitrome",
 	"repository": {
@@ -40,12 +40,12 @@
 				"title": "Toggle enable/disable color blocks."
 			}
 		],
-        "keybindings": [
-            {
-                "command": "color-blocks.add",
-                "key": "ctrl+K ctrl+B"
-            }
-        ],
+		"keybindings": [
+			{
+				"command": "color-blocks.add",
+				"key": "ctrl+K ctrl+B"
+			}
+		],
 		"snippets": [
 			{
 				"path": "./src/snippets.code-snippets"
