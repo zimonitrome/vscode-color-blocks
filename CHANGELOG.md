@@ -1,3 +1,7 @@
+## [2.1.0]
+
+Fixed bug: Color block stretching outside of document crashed extension. Changed color-blocks.add command shortcut to ctrl+K ctrl+B since ctrl+C will remove copy shortcut.
+
 ## [2.0.0]
 
 Major changes:
