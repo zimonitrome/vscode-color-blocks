@@ -4,20 +4,18 @@ Add colorful comment ranges that span multiple lines. This makes it easier to un
 
 ![feature X](/media/basic_example.png)
 
-## Motivation
-
-We rely on our vision to navigate large code files. I often find myself getting lost when working with code bases of similar looking lines or ambiguous syntax. To navigate code files, we either normally read the syntax semantically, look at the macro shape of larger structures of lines, use comments (sometimes with dividers/other blocks), or use ctrl+f as we frantically scroll through our files. This extensions aims to help navigate and annotate code by providing colors to mark regions of files, making them distinguishable visually.
+---
 
 ## Features & Settings
 
 ### Syntax
 
-This extension will look for curly brackets inside comments containing at least a hex color argument.
+This extension will look for curly brackets inside comments containing at least a hex color argument. Example:
 
 ```
 # MyColorBlock {#f9e, 4}
 |       |         |   |
-|       |         |   |-> number of lines
+|       |         |   |-> number of lines (optional)
 |       |         |
 |       |         |-> hex color 3 or 6 characters
 |       |
@@ -25,6 +23,13 @@ This extension will look for curly brackets inside comments containing at least 
 |
 |-> comment character (here for Python)
 ```
+
+
+### Sample usage
+
+Color blocks work with both line comments and block comments. All lines in the comment will be part of the color block. If no number is specified after the hex color argument, then the color range will also capture any lines until an empty line.
+
+![block comment example](/media/block_comments_example.png)
 
 ### Three different ways to add color blocks.
 
@@ -34,18 +39,30 @@ This extension will look for curly brackets inside comments containing at least 
 * **Snippet**  
   By start writing `color block` and selecting it from the context menu suggestions.
 
-* **Command**  
-  By pressing <kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> and selecting "Add Color Block". This command can be bound to a hotkey.
+* **Command**
+  By pressing <kbd>CTRL</kbd>+<kbd>C</kbd> <kbd>CTRL</kbd>+<kbd>B</kbd> in succession (similar to the default command for toggling line comments).
+
+  Alternatively by selecting "Add Color Block" from the command palette (<kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd>).
 
 ![feature X](/media/how_to_add_blocks.gif)
+
+**Note:** The above video is slightly outdated.
 
 ### Wrapping
 
 ![feature X](/media/wrapping.gif)
 
+**Note:** The above video is slightly outdated.
+
+
 ### Styling
 
 ![feature X](/media/style_settings.gif)
+
+**Note:** The above video is slightly outdated.
+
+
+---
 
 ## Inspired by
 
@@ -54,8 +71,3 @@ This extension will look for curly brackets inside comments containing at least 
 * [HiLight](https://marketplace.visualstudio.com/items?itemName=f0lio.hilight)
 
 GIFs were produced using [Gifski](https://gif.ski/).
-
-## Known Issues
-
-* Block comments are not supported for the moment
-* Special characters longer than 1ch might overflow the comment range

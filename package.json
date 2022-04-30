@@ -10,7 +10,8 @@
 	},
 	"categories": [
 		"Other",
-		"Snippets"
+		"Snippets",
+		"Visualization"
 	],
 	"keywords": [
 		"comments",
@@ -39,6 +40,12 @@
 				"title": "Toggle enable/disable color blocks."
 			}
 		],
+        "keybindings": [
+            {
+                "command": "color-blocks.add",
+                "key": "ctrl+C ctrl+B"
+            }
+        ],
 		"snippets": [
 			{
 				"path": "./src/snippets.code-snippets"

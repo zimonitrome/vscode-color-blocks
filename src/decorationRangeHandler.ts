@@ -68,14 +68,16 @@ export class DecorationRangeHandler {
                 // No lines given, skip
                 if (!decorationRange.nLines) continue;
 
-                // If edit was made after the comment and before the end of the range
-                if (change.range.start.line >= decorationRange.codeStartLine && decorationRange.endLine >= change.range.start.line) {
-                    // Change range starts inside dec range
+                const validChangeRange = new vscode.Range(
+                    doc.lineAt(decorationRange.codeStartLine-1).range.end,
+                    doc.lineAt(decorationRange.endLine).range.end,
+                );
 
-                    const nIntersectingLines = (
-                        Math.min(decorationRange.endLine, change.range.end.line)
-                        - Math.max(decorationRange.codeStartLine, change.range.start.line)
-                    );
+                // If edit was made after the comment and before the end of the range
+                if (validChangeRange.contains(change.range.start)) {
+                    // Change range starts inside dec range
+                    const intersection = validChangeRange.intersection(change.range)!;
+                    const nIntersectingLines = intersection.end.line - intersection.start.line;
                     const diff = linesInserted - nIntersectingLines;
 
                     decorationRange.endLine += diff;
