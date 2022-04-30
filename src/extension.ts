@@ -2,8 +2,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { CommentConfigHandler } from './commentConfigHandler';
-import { getIndention } from './helpers/miscHelpers';
 import { DecorationRangeHandler } from './decorationRangeHandler';
+import commands from './commands';
 
 const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 
@@ -54,28 +54,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Get the active editor for the first time and initialize
     editorChange(vscode.window.activeTextEditor);
 
-    // Add command {#aca,22} TODO: Maybe move to another file?
-    context.subscriptions.push(vscode.commands.registerCommand("color-blocks.add", () => {
-        let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
-        let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
-        for (let selection of activeEditor.selections) {
-            let firstLine = Math.min(selection.end.line, selection.start.line);
-
-            for (let line of insertMap)
-                if (firstLine >= line) firstLine += 1;
-            insertMap.push(firstLine);
-
-            const nCommentLines = Math.abs(selection.end.line - selection.start.line + 2);
-            let firstLineText = activeEditor.document.lineAt(firstLine).text;
-            let indention = getIndention(firstLineText, tabSize);
-            // Currently no supported way to call existing snippets easily and add custom args?
-            activeEditor.insertSnippet(
-                new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}}," + nCommentLines.toString() + "}\n"),
-                new vscode.Position(firstLine, indention),
-                { undoStopBefore: false, undoStopAfter: false }
-            );
-        }
-    }));
+    // Define all commands {#aca,1}
+    for (const command of commands)
+        context.subscriptions.push(command);
 
     context.subscriptions.push(vscode.commands.registerCommand("color-blocks.toggle", () => 
         settings.update("behavior.enabled", !settings.behavior.enabled)
