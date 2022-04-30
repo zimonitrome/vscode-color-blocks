@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getSettings } from './extension';
 import { getIndention } from './helpers/miscHelpers';
 
 const commands = [
@@ -25,6 +26,11 @@ const commands = [
                 { undoStopBefore: false, undoStopAfter: false }
             );
         }
+    }),
+
+    vscode.commands.registerCommand("color-blocks.toggle", () => {
+        const settings = getSettings();
+        settings.update("behavior.enabled", !settings.behavior.enabled);
     })
 ];
 

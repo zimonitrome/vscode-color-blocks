@@ -5,7 +5,7 @@ import { CommentConfigHandler } from './commentConfigHandler';
 import { DecorationRangeHandler } from './decorationRangeHandler';
 import commands from './commands';
 
-const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
+export const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 
 // Local variables {#e77,4}
 const commentConfigHandler = new CommentConfigHandler();
@@ -57,10 +57,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Define all commands {#aca,1}
     for (const command of commands)
         context.subscriptions.push(command);
-
-    context.subscriptions.push(vscode.commands.registerCommand("color-blocks.toggle", () => 
-        settings.update("behavior.enabled", !settings.behavior.enabled)
-    ));
 
     // Handle active file changed {#ff0,2}
     vscode.window.onDidChangeActiveTextEditor(editorChange);
