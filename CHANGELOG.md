@@ -1,10 +1,34 @@
+## [2.0.0]
+
+Major changes:
+
+- Added support for block comments.
+- Added command for enabling/disabling color-blocks (visibility).
+- Changed behavior of color block arguments.
+  - Specifying number of lines as the second argument is now optional.
+    - If number of lines is not specified, then the color block will continue until an empty line.
+  - Color blocks now always color the entire comment in which the color block commands are written.
+  - Number of lines now refer to the number of lines *after the comment line/block* to include in the color block. (Breaking)
+- The `color-blocks.add` command can now be called using `ctrl+C ctrl+B`.
+- Added setting to enlarge the comment text (it still looks a little wonky).
+
+Minor changes / fixes:
+
+- Skip expanding color-block at the very end of the document.
+- Color-blocks with lines extending beyond the document line count are now truncated.
+- Made updating existing color blocks with newlines more robust and reliable.
+
 ## [1.0.6]
 
-Improvements to performance.\\nThis does however make the blocks a little less responsive but has the added benefit of not lagging down the entire editor.
+Improvements to performance.
+
+This does however make the blocks a little less responsive but has the added benefit of not lagging down the entire editor.
 
 ## [1.0.5]
 
-Fixed empty row affecting wrapping.\\nUpdated readme.
+Fixed empty row affecting wrapping.
+
+Updated readme.
 
 ## [1.0.4]
 
