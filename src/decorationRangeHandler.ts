@@ -19,12 +19,14 @@ interface DecorationRange {
     endLine: number;
 }
 
+const safeGetLineNr = (lineNr: number, doc: vscode.TextDocument) => Math.min(lineNr, doc.lineCount - 1);
+
 export class DecorationRangeHandler {
 
     public decorationRanges: Array<DecorationRange> = [];
     private allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
-    // {#88f,10}
+    // {#88f,9}
     public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
         // Clear all decoration types
         this.allDecorationTypes.forEach(dt => dt.dispose());
@@ -70,7 +72,7 @@ export class DecorationRangeHandler {
 
                 const validChangeRange = new vscode.Range(
                     doc.lineAt(decorationRange.codeStartLine-1).range.end,
-                    doc.lineAt(decorationRange.endLine).range.end,
+                    doc.lineAt(safeGetLineNr(decorationRange.endLine, doc)).range.end,
                 );
 
                 // If edit was made after the comment and before the end of the range
@@ -80,7 +82,7 @@ export class DecorationRangeHandler {
                     const nIntersectingLines = intersection.end.line - intersection.start.line;
                     const diff = linesInserted - nIntersectingLines;
 
-                    decorationRange.endLine += diff;
+                    decorationRange.endLine = safeGetLineNr(decorationRange.endLine + diff, doc);
                     const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
                     const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines.range[0]));
                     // ^^ NOTE: This works so much better than using the range in "decorationRange".
@@ -88,14 +90,15 @@ export class DecorationRangeHandler {
 
                     if (!editRange) continue;
 
-                    // Make edits {#838,1}
+                    // Make edits {#838}
                     this.makeReplaceEdit(editRange, nLinesNew.toString(), 200);
+                
                 }
             }
         }
     };
 
-    // Scan document for color blockS {#88f,65}
+    // Scan document for color blockS {#88f,61}
     public addNewDecorationRanges(activeEditor: vscode.TextEditor, comments: Comment[]) {
         if (!activeEditor) return; // Needed?
         const doc = activeEditor.document;
@@ -136,6 +139,9 @@ export class DecorationRangeHandler {
 
                 nLinesAfterComment = nLinesAfterCommentUntilEmpty;
             }
+            
+            // Make sure endLine is not outside of document
+            const endLine = safeGetLineNr(commentEndLineNumber + nLinesAfterComment, doc);
 
             this.decorationRanges.push({
                 comment: comment,
@@ -150,7 +156,7 @@ export class DecorationRangeHandler {
                 nLines: nLines,
                 commentStartLine: commentStartLineNumber,
                 codeStartLine: commentEndLineNumber + 1,
-                endLine: commentEndLineNumber + nLinesAfterComment,
+                endLine: endLine,
             });
         }
     };
@@ -172,7 +178,7 @@ export class DecorationRangeHandler {
         let left!: string;
         let customWidth!: string;
 
-        const endLine = Math.min(decorationRange.endLine, doc.lineCount - 1);
+        const endLine = safeGetLineNr(decorationRange.endLine, doc);
 
         // Calculate minimum width if wrapping is enabled
         if (settings.wrapText.enabled) {

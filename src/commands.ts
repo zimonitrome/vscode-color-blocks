@@ -3,6 +3,8 @@ import { getSettings } from './extension';
 import { getIndention } from './helpers/miscHelpers';
 
 const commands = [
+    
+    // Command for adding color comments {#454,24}
     vscode.commands.registerCommand("color-blocks.add", () => {
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor) return;
@@ -28,10 +30,12 @@ const commands = [
         }
     }),
 
+    // Command for showing or hiding color blocks {#454,4}
     vscode.commands.registerCommand("color-blocks.toggle", () => {
         const settings = getSettings();
         settings.update("behavior.enabled", !settings.behavior.enabled);
     })
+
 ];
 
 export default commands;

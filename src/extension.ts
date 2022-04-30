@@ -25,11 +25,13 @@ const editorChange = (editor: vscode.TextEditor | undefined) => {
     }
 };
 
-// {#88f,16}
-// * IMPORTANT:
-// * To avoid calling update too often,
-// * set a timer for 100ms to wait before drawing
-// Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
+/* 
+* IMPORTANT:
+* To avoid calling update too often,
+* set a timer for 100ms to wait before drawing
+Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
+{#88f,14}
+*/
 let timeout: NodeJS.Timer;
 const triggerUpdateDecorations = () => {
     if (timeout) {
@@ -54,14 +56,14 @@ export function activate(context: vscode.ExtensionContext) {
     // Get the active editor for the first time and initialize
     editorChange(vscode.window.activeTextEditor);
 
-    // Define all commands {#aca,1}
+    // Define all commands {#aca}
     for (const command of commands)
         context.subscriptions.push(command);
 
-    // Handle active file changed {#ff0,2}
+    // Handle active file changed {#ff0}
     vscode.window.onDidChangeActiveTextEditor(editorChange);
 
-    // Handle file contents changed {#ff0,13}
+    // Handle file contents changed {#ff0,12}
     vscode.workspace.onDidChangeTextDocument(event => {
         if (activeEditor && event.document === activeEditor.document) {
             if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
@@ -75,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // Handle active file changed {#ff0,5}
+    // Handle active file changed {#ff0,4}
     vscode.workspace.onDidChangeConfiguration(event => {
         settings = getSettings();
         triggerUpdateDecorations();
