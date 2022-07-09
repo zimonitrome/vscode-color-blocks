@@ -3,6 +3,7 @@ import { hexToHsl, hslToHex, decimalToHexString } from './helpers/colorHelpers';
 import { colorBlockRegex } from './helpers/colorBlockRegex';
 import { arrAdd, getIndention } from './helpers/miscHelpers';
 import { Comment } from './commentConfigHandler';
+import toHex = require('colornames');
 
 interface ContentRange {
     content: any;
@@ -112,6 +113,13 @@ export class DecorationRangeHandler {
             if (!match)
                 continue;
 
+            const colorHex = match.groups?.color.startsWith('#')
+                ? match.groups.color
+                : toHex(match.groups?.color ?? ''); // returns undefined if argument isn't a named color
+
+            if (!colorHex)
+                continue;
+
             const commentStartLineNumber = doc.positionAt(comment.range[0]).line;
             const commentEndLineNumber = doc.positionAt(comment.range[1]).line;
 
@@ -150,7 +158,7 @@ export class DecorationRangeHandler {
                     range: arrAdd(match.indices![0]!, matchOffset) as [number, number]
                 },
                 hexColor: {
-                    content: match.groups!.color,
+                    content: colorHex,
                     range: arrAdd(match.indices!.groups!.color, matchOffset) as [number, number]
                 },
                 nLines: nLines,

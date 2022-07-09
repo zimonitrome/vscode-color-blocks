@@ -10,6 +10,10 @@ VALID:
 { color : #123 , lines : 2 }
 { color : #123 }
 {#abc}
+{orangered}
+{orangered,2}
+{color:orangered}
+{color:orangered,2}
 
 INVALID
 {#abg,2}
@@ -21,3 +25,7 @@ INVALID
 {color:"#123",lines:"2"}
 { lines : 2 }
 {,lines:2}
+{#orangered}
+{#orangered,2}
+{color:#orangered}
+{color:#orangered,2}

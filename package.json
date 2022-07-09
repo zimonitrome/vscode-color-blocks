@@ -194,6 +194,7 @@
 		"deploy": "node ./publish.js"
 	},
 	"devDependencies": {
+		"@types/colornames": "^1.1.2",
 		"@types/json5": "^2.2.0",
 		"@types/node": "14.x",
 		"@types/vscode": "^1.65.0",
@@ -208,6 +209,7 @@
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
+		"colornames": "^1.1.1",
 		"json5": "^2.2.1"
 	}
 }

@@ -15,7 +15,10 @@ const regexString = mulitlineRegex`
 \s*
     (?:                                     // Mandatory argument:
         (?:color\s*:\s*)?                   //  Optional key word
-        (?<color>#(?:[0-9a-f]{3}){1,2})     //  Capture mandatory 3-6 letter hexcolor -> group name "color"
+        (?<color>(?:                        //  Capture mandatory color specifier -> group name "color"
+            (#(?:[0-9a-f]{3}){1,2})         //   3-6 letter hexcolor
+            |(\w+)                          //   ... OR named color (arbitrary word)
+        ))
     )
 \s*
     (?:                                     // Optional argument:
