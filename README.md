@@ -61,6 +61,9 @@ Color blocks work with both line comments and block comments. All lines in the c
 
 **Note:** The above video is slightly outdated.
 
+### Set Color By Name
+You can set colors by name in v2.0 of Color Blocks, the syntax looks like this `# Your Comment Here {silver,3}`.
+For a list of valid color names, see this: https://drafts.csswg.org/css-color/#named-colors
 
 ---
 
