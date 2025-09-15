@@ -28,14 +28,18 @@ const editorChange = (editor: vscode.TextEditor | undefined) => {
 /* 
 * IMPORTANT:
 * To avoid calling update too often,
-* set a timer for 100ms to wait before drawing
+* this function implements a "leading-edge debounce"
+* with a configurable delay via the settings.
 Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
-{#88f,14}
+{#88f,18}
 */
-let timeout: NodeJS.Timer;
+let timeout: NodeJS.Timer | undefined;
 const triggerUpdateDecorations = () => {
+    let delay: number = 20; // ms
+    
     if (timeout) {
         clearTimeout(timeout);
+        delay = settings.behavior.debounceInterval; // ms
     }
     timeout = setTimeout(async () => {
         decorationRangeHandler.decorationRanges = [];
@@ -44,7 +48,8 @@ const triggerUpdateDecorations = () => {
             decorationRangeHandler.addNewDecorationRanges(activeEditor, comments);
         }
         decorationRangeHandler.redrawDecorationRanges(activeEditor, settings); // This one takes a long time
-    }, 100);
+        timeout = undefined;
+    }, delay );
 };
 
 
