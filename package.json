@@ -177,7 +177,16 @@
 						"default": true,
 						"description": "Toggle showing color blocks.",
 						"scope": "window"
-					}
+					},
+					"color-blocks.behavior.debounceInterval": {
+						"type": "number",
+						"default": 100,
+                        "multipleOf": 1,
+                        "minimum": 20,
+                        "maximum": 10000,
+						"description": "Minimum delay in milliseconds between consecutive color block updates to reduce performance overhead. (min: 20ms, max: 10s)",
+						"scope": "window"
+					}                    
 				}
 			}
 		]
