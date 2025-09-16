@@ -1,3 +1,6 @@
+// Usage: 
+//   node publish.js --version <version> --message "<changelog message>"
+
 // Imports {#cdd,4}
 var execSync = require('child_process').execSync;
 var fs = require('fs');
