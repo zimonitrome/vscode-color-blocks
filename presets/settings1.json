@@ -1,6 +1,6 @@
 {
     "editor.minimap.renderCharacters": false,
-    "color-blocks.wrapText.padding": 0,
+    "color-blocks.wrapText.paddingRight": 0,
     "color-blocks.standardizeColorBrightness.enabled": true,
     "color-blocks.standardizeColorBrightness.background": 60,
     "color-blocks.border.opacity": 0.8,

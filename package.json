@@ -57,15 +57,15 @@
 				"properties": {
 					"color-blocks.wrapText.enabled": {
 						"type": "boolean",
-						"default": false,
+						"default": true,
 						"description": "Make the color block shrink horizontally to match the minimum amount of code.",
 						"scope": "window",
 						"order": 0
 					},
-					"color-blocks.wrapText.padding": {
+					"color-blocks.wrapText.paddingRight": {
 						"type": "number",
 						"default": 1,
-						"description": "Padding to add if `wrapText` is enabled. Measured in characters.",
+						"description": "Padding to add to the right of the color block if `wrapText` is enabled. Measured in characters.",
 						"scope": "window"
 					}
 				}

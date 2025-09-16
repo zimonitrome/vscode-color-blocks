@@ -204,14 +204,15 @@ export class DecorationRangeHandler {
                 longestLineLength = Math.max(longestLineLength, line.text.length);
             }
 
-            const padding = settings.wrapText.padding;
             left = `${shortestIndentation}ch`;
-            customWidth = `${longestLineLength - shortestIndentation + padding}ch`;
+            customWidth = `${longestLineLength - shortestIndentation + settings.wrapText.paddingRight}ch`;
         }
         else {
-            const scrollbarSize = vscode.workspace.getConfiguration('editor').scrollbar.verticalScrollbarSize;
+            // Otherwise, stretch to the entire width of the editor minus the scrollbar
             left = `0`;
-            customWidth = `calc(100% - ${scrollbarSize}px)`;
+            // const scrollbarSize = vscode.workspace.getConfiguration('editor').scrollbar.verticalScrollbarSize;
+            // customWidth = `calc(100% - ${scrollbarSize}px)`; // currently doesn't work :(
+            customWidth = `999999px`; // HACK
         }
 
         let backgroundHexColor = hexColor + decimalToHexString(255 * settings.background.opacity);
@@ -242,22 +243,23 @@ export class DecorationRangeHandler {
                 overviewRulerColor: backgroundHexColor,
                 overviewRulerLane: vscode.OverviewRulerLane.Full,
                 isWholeLine: true,
+                textDecoration: `;
+                position: relative;`,
                 before: {
                     backgroundColor: backgroundHexColor,
                     textDecoration: `;
-                        border: 0px ${settings.border.style} ${borderHexColor};
-                        border-width: ${topWidth} ${settings.border.width} ${bottomWidth} ${settings.border.width};
-                        border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
-                        pointer-events: none;
-                        left: ${left};
-                        box-sizing: border-box;
-                        position: absolute;
-                `,
+                    border: 0px ${settings.border.style} ${borderHexColor};
+                    border-width: ${topWidth} ${settings.border.width} ${bottomWidth} ${settings.border.width};
+                    border-radius: ${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius};
+                    pointer-events: none;
+                    left: ${left};
+                    box-sizing: border-box;
+                    position: absolute;
+                    `,
                     contentText: '',
                     width: customWidth,
                     height: "100%",
                 },
-                textDecoration: `; position: relative;`,
             });
             editor.setDecorations(
                 midLineDecor,
