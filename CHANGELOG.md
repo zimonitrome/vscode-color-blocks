@@ -1,3 +1,7 @@
+## [v2.3.0]
+
+Support languages without block commands. Improve debouncing with configurable interval. Hotfix visuals and default to wrapping enabled.
+
 ## [2.2.0]
 
 Added support for named colors. Lowered supported vscode version.
