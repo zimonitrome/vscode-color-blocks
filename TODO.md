@@ -14,9 +14,15 @@ Should do:
         * Add shell and PowerShell documents for `${GREEN}` and `#` comment behavior.
         * Add huge single block, many tiny blocks, and overlapping block cases.
         * Add visual checks for dark/light themes if VS Code screenshots can be automated reliably.
+    * Make automatic line-count updates safer without delaying normal editing.
+        * Do not debounce visible line-count updates; rapid Enter presses inside a block should update immediately.
+        * Keep the existing protections for same-line edits, count-text edits, and editor/document targeting.
+        * If this is revisited, prefer surgical guards over timing delays.
     * Native rendering prototype was rejected.
         * It looked worse, lost wrapped/indent-aware block sizing, and was not faster in stress runs.
         * Do not add a native render mode unless VS Code exposes a better block decoration API later.
+    * Debounced automatic line-count source edits were rejected.
+        * They made quick structural edits feel wrong, especially pressing Enter twice quickly inside a block.
 * Completed recently:
     * Cached decoration types by style key.
         * Stress comparison for decoration type creation:
