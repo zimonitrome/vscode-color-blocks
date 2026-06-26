@@ -25,27 +25,56 @@ const safeGetLineNr = (lineNr: number, doc: vscode.TextDocument) => Math.min(lin
 export class DecorationRangeHandler {
 
     public decorationRanges: Array<DecorationRange> = [];
-    private allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
+    private decorationTypeCache = new Map<string, vscode.TextEditorDecorationType>();
+    private activeDecorationKeys = new Set<string>();
+    private pendingDecorations = new Map<string, vscode.Range[]>();
 
-    private clearDecorationTypes() {
-        this.allDecorationTypes.forEach(dt => dt.dispose());
-        this.allDecorationTypes = [];
+    private queueDecorations(
+        key: string,
+        options: vscode.DecorationRenderOptions,
+        ranges: vscode.Range[],
+    ) {
+        if (!this.decorationTypeCache.has(key))
+            this.decorationTypeCache.set(key, vscode.window.createTextEditorDecorationType(options));
+
+        this.pendingDecorations.set(key, [
+            ...(this.pendingDecorations.get(key) ?? []),
+            ...ranges
+        ]);
+    }
+
+    private flushDecorations(editor: vscode.TextEditor) {
+        const nextDecorationKeys = new Set(this.pendingDecorations.keys());
+
+        for (const key of this.activeDecorationKeys) {
+            if (!nextDecorationKeys.has(key))
+                editor.setDecorations(this.decorationTypeCache.get(key)!, []);
+        }
+
+        for (const [key, ranges] of this.pendingDecorations)
+            editor.setDecorations(this.decorationTypeCache.get(key)!, ranges);
+
+        this.activeDecorationKeys = nextDecorationKeys;
+        this.pendingDecorations = new Map();
     }
 
     public dispose() {
-        this.clearDecorationTypes();
+        this.decorationTypeCache.forEach(dt => dt.dispose());
+        this.decorationTypeCache.clear();
+        this.activeDecorationKeys.clear();
+        this.pendingDecorations.clear();
         this.decorationRanges = [];
     }
 
-    // {#88f,9}
+    // {#88f,8}
     public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
-        // Clear all decoration types
-        this.clearDecorationTypes();
+        this.pendingDecorations = new Map();
 
         // Color all range lines
         this.decorationRanges.forEach(decorationRange => {
             this.styleRange(decorationRange, activeEditor, settings);
         });
+        this.flushDecorations(activeEditor);
     };
 
     private async makeReplaceEdit(editor: vscode.TextEditor, range: vscode.Range, text: string) {
@@ -272,7 +301,7 @@ export class DecorationRangeHandler {
             const topWidth = isTopLine ? settings.border.width : 0;
             const bottomWidth = isBottomLine ? settings.border.width : 0;
 
-            const lineDecorationType = vscode.window.createTextEditorDecorationType({
+            const lineDecorationOptions = {
                 overviewRulerColor: backgroundHexColor,
                 overviewRulerLane: vscode.OverviewRulerLane.Full,
                 isWholeLine: true,
@@ -293,9 +322,22 @@ export class DecorationRangeHandler {
                     width: customWidth,
                     height: "100%",
                 },
-            });
-            editor.setDecorations(lineDecorationType, ranges);
-            this.allDecorationTypes.push(lineDecorationType);
+            };
+            this.queueDecorations(
+                [
+                    'block-line',
+                    backgroundHexColor,
+                    borderHexColor,
+                    settings.border.style,
+                    settings.border.width,
+                    settings.border.radius,
+                    key,
+                    left,
+                    customWidth,
+                ].join('|'),
+                lineDecorationOptions,
+                ranges
+            );
         }
 
         // Define relevant ranges
@@ -322,7 +364,7 @@ export class DecorationRangeHandler {
         ];
 
         // Style relevant comment text
-        let keywordDecorationType = vscode.window.createTextEditorDecorationType({
+        const keywordDecorationOptions = {
             fontWeight: settings.commentLine.commentFontWeight,
             opacity: "1.0",
             ...(settings.commentLine.largeText && {
@@ -332,24 +374,32 @@ export class DecorationRangeHandler {
                     z-index: 1;
                     font-family: sans-serif;`
             })
-        });
-        editor.setDecorations(
-            keywordDecorationType,
+        };
+        this.queueDecorations(
+            [
+                'comment-keyword',
+                settings.commentLine.commentFontWeight,
+                settings.commentLine.largeText,
+            ].join('|'),
+            keywordDecorationOptions,
             textRanges
         );
-        this.allDecorationTypes.push(keywordDecorationType);
 
         // Style rest of the comment text
-        let commentDecorationType = vscode.window.createTextEditorDecorationType({
+        const commentDecorationOptions = {
             fontWeight: "normal",
             opacity: settings.commentLine.lineOpacity.toString(),
             ...(settings.commentLine.color && { color: lighterHexColor }),
-        });
-        editor.setDecorations(
-            commentDecorationType,
+        };
+        this.queueDecorations(
+            [
+                'comment-line',
+                settings.commentLine.lineOpacity,
+                settings.commentLine.color ? lighterHexColor : '',
+            ].join('|'),
+            commentDecorationOptions,
             [entireCommentRange]
         );
-        this.allDecorationTypes.push(commentDecorationType);
 
     };
 

@@ -3,6 +3,7 @@ const vscode = require('vscode');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const isStrict = process.env.COLOR_BLOCKS_STRESS_STRICT !== '0';
+let decorationTypesCreated = 0;
 
 function makeDocument(blockCount, linesPerBlock) {
     const lines = [
@@ -58,6 +59,7 @@ async function editBurst(editor, iterations) {
 async function runScenario(name, blockCount, linesPerBlock, editIterations) {
     console.log(`Opening ${blockCount} blocks x ${linesPerBlock} lines and running ${editIterations} edit bursts...`);
     const start = performance.now();
+    const startDecorationTypesCreated = decorationTypesCreated;
     const editor = await openStressEditor(blockCount, linesPerBlock);
     await sleep(1500);
     const editMetrics = await editBurst(editor, editIterations);
@@ -70,6 +72,7 @@ async function runScenario(name, blockCount, linesPerBlock, editIterations) {
         lineCount: editor.document.lineCount,
         editIterations,
         ...editMetrics,
+        decorationTypesCreated: decorationTypesCreated - startDecorationTypesCreated,
         wallMs: performance.now() - start,
     };
 
@@ -83,6 +86,7 @@ async function runScenario(name, blockCount, linesPerBlock, editIterations) {
 async function runSideBySideScenario() {
     console.log('Opening two color-block documents side by side and editing both...');
     const start = performance.now();
+    const startDecorationTypesCreated = decorationTypesCreated;
     const leftEditor = await openStressEditor(12, 35, vscode.ViewColumn.One);
     const rightEditor = await openStressEditor(12, 35, vscode.ViewColumn.Two);
     await sleep(1500);
@@ -101,6 +105,7 @@ async function runSideBySideScenario() {
         rightFailedEdits: rightMetrics.failedEdits,
         leftEditBurstMs: leftMetrics.editBurstMs,
         rightEditBurstMs: rightMetrics.editBurstMs,
+        decorationTypesCreated: decorationTypesCreated - startDecorationTypesCreated,
         wallMs: performance.now() - start,
     };
 
@@ -115,6 +120,12 @@ async function runSideBySideScenario() {
 }
 
 async function run() {
+    const createTextEditorDecorationType = vscode.window.createTextEditorDecorationType.bind(vscode.window);
+    vscode.window.createTextEditorDecorationType = (...args) => {
+        decorationTypesCreated++;
+        return createTextEditorDecorationType(...args);
+    };
+
     const extension = vscode.extensions.getExtension('zimonitrome.color-blocks');
     assert.ok(extension, 'Color Blocks extension was not loaded by the Extension Host');
     await extension.activate();
