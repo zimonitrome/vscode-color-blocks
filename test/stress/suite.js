@@ -23,12 +23,72 @@ function makeDocument(blockCount, linesPerBlock) {
     return lines.join('\n');
 }
 
-async function openStressEditor(blockCount, linesPerBlock, viewColumn = vscode.ViewColumn.Active) {
+function makeShellFalsePositiveDocument(groupCount, linesPerGroup) {
+    const upperGreen = '${GREEN}';
+    const upperReset = '${RESET}';
+    const lowerGreen = '${green}';
+    const lowerOrangeRed = '${orangered}';
+    const lowerReset = '${reset}';
+    const lines = [
+        '#!/usr/bin/env bash',
+        'GREEN="\\033[0;32m"',
+        'RESET="\\033[0m"',
+        'ORANGERED="not-a-color-block"',
+        '',
+    ];
+
+    for (let group = 0; group < groupCount; group++) {
+        lines.push(`# Bash prompt colors ${upperGreen}ready${upperReset} group ${group}`);
+        lines.push(`# Lowercase substitutions ${lowerGreen} ${lowerOrangeRed} ${lowerReset} must stay inert`);
+        lines.push(`printf '%s\\n' "${upperGreen}starting group ${group}${upperReset}"`);
+        for (let line = 0; line < linesPerGroup; line++) {
+            lines.push(`echo "${upperGreen}value_${group}_${line}${upperReset}"`);
+        }
+        lines.push('');
+    }
+
+    return lines.join('\n');
+}
+
+function makePowerShellDocument(blockCount, linesPerBlock) {
+    const lines = [
+        '$Green = [ConsoleColor]::Green',
+        '$Reset = [ConsoleColor]::White',
+        '',
+    ];
+
+    for (let block = 0; block < blockCount; block++) {
+        const color = (block % 2 === 0) ? '#78d' : 'orangered';
+        lines.push(`# PowerShell line block ${block} {${color}, ${linesPerBlock}}`);
+        for (let line = 0; line < linesPerBlock; line++)
+            lines.push(`Write-Output "line_${block}_${line}"`);
+        lines.push('');
+    }
+
+    lines.push('<#');
+    lines.push('PowerShell block comment {#9c6, 6}');
+    lines.push('#>');
+    lines.push('$items = @(');
+    lines.push('    "alpha"');
+    lines.push('    "beta"');
+    lines.push(')');
+    lines.push('foreach ($item in $items) {');
+    lines.push('    Write-Output $item');
+    lines.push('}');
+
+    return lines.join('\n');
+}
+
+async function openStressEditorFromContent(language, content, viewColumn = vscode.ViewColumn.Active) {
     const document = await vscode.workspace.openTextDocument({
-        language: 'typescript',
-        content: makeDocument(blockCount, linesPerBlock),
+        language,
+        content,
     });
     return vscode.window.showTextDocument(document, viewColumn);
+}
+
+async function openStressEditor(blockCount, linesPerBlock, viewColumn = vscode.ViewColumn.Active) {
+    return openStressEditorFromContent('typescript', makeDocument(blockCount, linesPerBlock), viewColumn);
 }
 
 async function editBurst(editor, iterations) {
@@ -69,6 +129,32 @@ async function runScenario(name, blockCount, linesPerBlock, editIterations) {
         scenario: name,
         blockCount,
         linesPerBlock,
+        lineCount: editor.document.lineCount,
+        editIterations,
+        ...editMetrics,
+        decorationTypesCreated: decorationTypesCreated - startDecorationTypesCreated,
+        wallMs: performance.now() - start,
+    };
+
+    console.log(`STRESS_RESULT ${JSON.stringify(result)}`);
+    if (isStrict)
+        assert.strictEqual(result.failedEdits, 0, `${name} had failed edits`);
+
+    return result;
+}
+
+async function runDocumentScenario(name, language, content, editIterations) {
+    console.log(`Opening ${language} stress document and running ${editIterations} edit bursts...`);
+    const start = performance.now();
+    const startDecorationTypesCreated = decorationTypesCreated;
+    const editor = await openStressEditorFromContent(language, content);
+    await sleep(1500);
+    const editMetrics = await editBurst(editor, editIterations);
+    await sleep(1500);
+
+    const result = {
+        scenario: name,
+        language,
         lineCount: editor.document.lineCount,
         editIterations,
         ...editMetrics,
@@ -132,10 +218,26 @@ async function run() {
 
     const manyBlocks = await runScenario('many-blocks', 40, 80, 100);
     const hugeBlocks = await runScenario('huge-blocks', 4, 1000, 40);
+    const shellSubstitutions = await runDocumentScenario(
+        'shellscript-substitution-false-positives',
+        'shellscript',
+        makeShellFalsePositiveDocument(30, 8),
+        60
+    );
+    const powerShellComments = await runDocumentScenario(
+        'powershell-line-and-block-comments',
+        'powershell',
+        makePowerShellDocument(20, 10),
+        60
+    );
     await runSideBySideScenario();
 
     assert.ok(manyBlocks.lineCount > 3000);
     assert.ok(hugeBlocks.lineCount > 4000);
+    assert.ok(shellSubstitutions.lineCount > 300);
+    assert.strictEqual(shellSubstitutions.decorationTypesCreated, 0);
+    assert.ok(powerShellComments.lineCount > 200);
+    assert.ok(powerShellComments.decorationTypesCreated > 0);
     console.log('Stress test completed without failed edits or Extension Host crashes.');
 }
 
