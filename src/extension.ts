@@ -129,6 +129,10 @@ export function activate(context: vscode.ExtensionContext) {
         settings = getSettings();
         triggerUpdateDecorations();
     });
+
+    vscode.window.onDidChangeActiveColorTheme(event => {
+        triggerUpdateDecorations();
+    });
 }
 
 // this method is called when your extension is deactivated

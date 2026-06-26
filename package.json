@@ -89,7 +89,13 @@
 					"color-blocks.standardizeColorBrightness.commentText": {
 						"type": "number",
 						"default": 80,
-						"description": "Lightness value to use when standardizing brightness of the text of the first line of the color block.",
+						"description": "Lightness value to use for color block comment text on dark themes.",
+						"scope": "window"
+					},
+					"color-blocks.standardizeColorBrightness.commentTextLight": {
+						"type": "number",
+						"default": 30,
+						"description": "Lightness value to use for color block comment text on light themes.",
 						"scope": "window"
 					}
 				}

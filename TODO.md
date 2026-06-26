@@ -1,37 +1,17 @@
 ## TODO:
 
 Should do:
-* Project roadmap / memory, in priority order:
-    * Fix decorations for all visible editors instead of only the active editor.
-        * Addresses side-by-side editor visibility, especially issue #19.
-        * Maintain one decoration handler per visible editor so disposing/redrawing one editor does not erase another.
-        * Listen to `onDidChangeVisibleTextEditors` and refresh affected editors.
-    * Make automatic line-count updates less intrusive.
-        * Consider debouncing source edits, defaulting auto-update off, or making updates a command/code action.
-        * Keep protecting normal typing edits from extension-owned edits.
-    * Extend automated verification.
-        * Add stress cases for side-by-side visible editors.
-        * Add shell and PowerShell documents for `${GREEN}` and `#` comment behavior.
-        * Add huge single block, many tiny blocks, and overlapping block cases.
-        * Add visual checks for dark/light themes if VS Code screenshots can be automated reliably.
-    * Make automatic line-count updates safer without delaying normal editing.
-        * Do not debounce visible line-count updates; rapid Enter presses inside a block should update immediately.
-        * Keep the existing protections for same-line edits, count-text edits, and editor/document targeting.
-        * If this is revisited, prefer surgical guards over timing delays.
-    * Native rendering prototype was rejected.
-        * It looked worse, lost wrapped/indent-aware block sizing, and was not faster in stress runs.
-        * Do not add a native render mode unless VS Code exposes a better block decoration API later.
-    * Debounced automatic line-count source edits were rejected.
-        * They made quick structural edits feel wrong, especially pressing Enter twice quickly inside a block.
-* Completed recently:
-    * Cached decoration types by style key.
-        * Stress comparison for decoration type creation:
-            * Many blocks: 600 -> 27.
-            * Huge blocks: 40 -> 12.
-            * Side-by-side: 240 -> 54.
+* Make automatic line-count updates less intrusive.
+    * Consider defaulting auto-update off, or making updates a command/code action.
+    * Keep protecting normal typing edits from extension-owned edits.
+* Extend automated verification.
+    * Add visual checks for dark/light themes if VS Code screenshots can be automated reliably.
+* Make automatic line-count updates safer without delaying normal editing.
+    * Do not debounce visible line-count updates; rapid Enter presses inside a block should update immediately.
+    * Keep the existing protections for same-line edits, count-text edits, and editor/document targeting.
+    * If this is revisited, prefer surgical guards over timing delays.
 * Update videos and images to show 2.0.0 behvaior
 * Test performance on slow PCs.
-* Don't clear ranges when moving to another file.
 * Fix bug: Line copying (alt+up/down) creates undoStops
     * LOTS OF STUFF CREATES UNDOSTOPS! WHY??? WHY VSCODE?????
 
@@ -56,9 +36,6 @@ Could do:
         * . -> Polkadot
         * [] -> Checkerboard
         * <> -> Rhombus
-* Support light theme better.
-    * Make comments darker instead of brighter.
-        * Change settings and variable to not say "brighter"/"lighter".
 * Improve overlapping ranges text colors.
     * Currently the text looks bland as multiple ranges alpha blend.
 * Add optional left bar.

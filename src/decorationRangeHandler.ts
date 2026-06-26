@@ -21,6 +21,10 @@ interface DecorationRange {
 }
 
 const safeGetLineNr = (lineNr: number, doc: vscode.TextDocument) => Math.min(lineNr, doc.lineCount - 1);
+const isLightTheme = () => (
+    vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light ||
+    vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.HighContrastLight
+);
 
 export class DecorationRangeHandler {
 
@@ -216,8 +220,10 @@ export class DecorationRangeHandler {
 
         // Set an even lighter version of the hex color to use later
         if (settings.standardizeColorBrightness.enabled)
-            l = settings.standardizeColorBrightness.commentText;
-        let lighterHexColor = hslToHex(h, s, l);
+            l = isLightTheme()
+                ? settings.standardizeColorBrightness.commentTextLight
+                : settings.standardizeColorBrightness.commentText;
+        let commentHexColor = hslToHex(h, s, l);
 
         let left!: string;
         let customWidth!: string;
@@ -389,13 +395,13 @@ export class DecorationRangeHandler {
         const commentDecorationOptions = {
             fontWeight: "normal",
             opacity: settings.commentLine.lineOpacity.toString(),
-            ...(settings.commentLine.color && { color: lighterHexColor }),
+            ...(settings.commentLine.color && { color: commentHexColor }),
         };
         this.queueDecorations(
             [
                 'comment-line',
                 settings.commentLine.lineOpacity,
-                settings.commentLine.color ? lighterHexColor : '',
+                settings.commentLine.color ? commentHexColor : '',
             ].join('|'),
             commentDecorationOptions,
             [entireCommentRange]
