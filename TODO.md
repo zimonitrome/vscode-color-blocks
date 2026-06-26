@@ -1,6 +1,25 @@
 ## TODO:
 
 Should do:
+* Project roadmap / memory, in priority order:
+    * Fix decorations for all visible editors instead of only the active editor.
+        * Addresses side-by-side editor visibility, especially issue #19.
+        * Maintain one decoration handler per visible editor so disposing/redrawing one editor does not erase another.
+        * Listen to `onDidChangeVisibleTextEditors` and refresh affected editors.
+    * Cache decoration types by style key.
+        * Reuse decoration types across redraws when color/style/radius/border settings are identical.
+        * Keep stress-test numbers for redraw cost, edit latency, and failed edits.
+    * Make automatic line-count updates less intrusive.
+        * Consider debouncing source edits, defaulting auto-update off, or making updates a command/code action.
+        * Keep protecting normal typing edits from extension-owned edits.
+    * Extend automated verification.
+        * Add stress cases for side-by-side visible editors.
+        * Add shell and PowerShell documents for `${GREEN}` and `#` comment behavior.
+        * Add huge single block, many tiny blocks, and overlapping block cases.
+        * Add visual checks for dark/light themes if VS Code screenshots can be automated reliably.
+    * Native rendering prototype was rejected.
+        * It looked worse, lost wrapped/indent-aware block sizing, and was not faster in stress runs.
+        * Do not add a native render mode unless VS Code exposes a better block decoration API later.
 * Update videos and images to show 2.0.0 behvaior
 * Test performance on slow PCs.
 * Don't clear ranges when moving to another file.

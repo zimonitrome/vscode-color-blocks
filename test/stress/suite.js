@@ -22,12 +22,12 @@ function makeDocument(blockCount, linesPerBlock) {
     return lines.join('\n');
 }
 
-async function openStressEditor(blockCount, linesPerBlock) {
+async function openStressEditor(blockCount, linesPerBlock, viewColumn = vscode.ViewColumn.Active) {
     const document = await vscode.workspace.openTextDocument({
         language: 'typescript',
         content: makeDocument(blockCount, linesPerBlock),
     });
-    return vscode.window.showTextDocument(document);
+    return vscode.window.showTextDocument(document, viewColumn);
 }
 
 async function editBurst(editor, iterations) {
@@ -80,6 +80,40 @@ async function runScenario(name, blockCount, linesPerBlock, editIterations) {
     return result;
 }
 
+async function runSideBySideScenario() {
+    console.log('Opening two color-block documents side by side and editing both...');
+    const start = performance.now();
+    const leftEditor = await openStressEditor(12, 35, vscode.ViewColumn.One);
+    const rightEditor = await openStressEditor(12, 35, vscode.ViewColumn.Two);
+    await sleep(1500);
+
+    const leftMetrics = await editBurst(leftEditor, 30);
+    const rightMetrics = await editBurst(rightEditor, 30);
+    await sleep(1500);
+
+    const visibleStressEditors = vscode.window.visibleTextEditors.filter(editor =>
+        editor.document === leftEditor.document || editor.document === rightEditor.document
+    );
+    const result = {
+        scenario: 'side-by-side',
+        visibleEditors: visibleStressEditors.length,
+        leftFailedEdits: leftMetrics.failedEdits,
+        rightFailedEdits: rightMetrics.failedEdits,
+        leftEditBurstMs: leftMetrics.editBurstMs,
+        rightEditBurstMs: rightMetrics.editBurstMs,
+        wallMs: performance.now() - start,
+    };
+
+    console.log(`STRESS_RESULT ${JSON.stringify(result)}`);
+    assert.strictEqual(result.visibleEditors, 2, 'side-by-side scenario should keep two visible editors');
+    if (isStrict) {
+        assert.strictEqual(result.leftFailedEdits, 0, 'side-by-side left editor had failed edits');
+        assert.strictEqual(result.rightFailedEdits, 0, 'side-by-side right editor had failed edits');
+    }
+
+    return result;
+}
+
 async function run() {
     const extension = vscode.extensions.getExtension('zimonitrome.color-blocks');
     assert.ok(extension, 'Color Blocks extension was not loaded by the Extension Host');
@@ -87,6 +121,7 @@ async function run() {
 
     const manyBlocks = await runScenario('many-blocks', 40, 80, 100);
     const hugeBlocks = await runScenario('huge-blocks', 4, 1000, 40);
+    await runSideBySideScenario();
 
     assert.ok(manyBlocks.lineCount > 3000);
     assert.ok(hugeBlocks.lineCount > 4000);

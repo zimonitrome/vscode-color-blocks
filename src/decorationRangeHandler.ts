@@ -27,11 +27,20 @@ export class DecorationRangeHandler {
     public decorationRanges: Array<DecorationRange> = [];
     private allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
-    // {#88f,10}
-    public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
-        // Clear all decoration types
+    private clearDecorationTypes() {
         this.allDecorationTypes.forEach(dt => dt.dispose());
         this.allDecorationTypes = [];
+    }
+
+    public dispose() {
+        this.clearDecorationTypes();
+        this.decorationRanges = [];
+    }
+
+    // {#88f,9}
+    public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
+        // Clear all decoration types
+        this.clearDecorationTypes();
 
         // Color all range lines
         this.decorationRanges.forEach(decorationRange => {

@@ -9,19 +9,36 @@ export const getSettings = () => vscode.workspace.getConfiguration("color-blocks
 
 // Local variables {#e77,4}
 const commentConfigHandler = new CommentConfigHandler();
-const decorationRangeHandler = new DecorationRangeHandler();
-let activeEditor: vscode.TextEditor;
+const decorationRangeHandlers = new Map<string, DecorationRangeHandler>();
+let activeEditor: vscode.TextEditor | undefined;
 let settings = getSettings();
+
+const getEditorKey = (editor: vscode.TextEditor) => `${editor.document.uri.toString()}:${editor.viewColumn ?? 0}`;
+
+const getDecorationRangeHandler = (editor: vscode.TextEditor) => {
+    const key = getEditorKey(editor);
+    let handler = decorationRangeHandlers.get(key);
+    if (!handler) {
+        handler = new DecorationRangeHandler();
+        decorationRangeHandlers.set(key, handler);
+    }
+    return handler;
+};
+
+const disposeHiddenEditors = () => {
+    const visibleEditorKeys = new Set(vscode.window.visibleTextEditors.map(getEditorKey));
+    for (const [key, handler] of decorationRangeHandlers) {
+        if (!visibleEditorKeys.has(key)) {
+            handler.dispose();
+            decorationRangeHandlers.delete(key);
+        }
+    }
+};
 
 const editorChange = (editor: vscode.TextEditor | undefined) => {
     if (editor) {
         // Update active editor
         activeEditor = editor;
-
-        // Update comment delimiter
-        commentConfigHandler.updateCurrentConfig(activeEditor.document.languageId);
-
-        triggerUpdateDecorations();
     }
 };
 
@@ -31,10 +48,14 @@ const editorChange = (editor: vscode.TextEditor | undefined) => {
 * this function implements a "leading-edge debounce"
 * with a configurable delay via the settings.
 Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
-{#88f,18}
+{#88f,30}
 */
 let timeout: NodeJS.Timer | undefined;
-const triggerUpdateDecorations = () => {
+let pendingEditors = new Map<string, vscode.TextEditor>();
+const triggerUpdateDecorations = (editors = vscode.window.visibleTextEditors) => {
+    for (const editor of editors)
+        pendingEditors.set(getEditorKey(editor), editor);
+
     let delay: number = 20; // ms
     
     if (timeout) {
@@ -42,12 +63,20 @@ const triggerUpdateDecorations = () => {
         delay = settings.behavior.debounceInterval; // ms
     }
     timeout = setTimeout(async () => {
-        decorationRangeHandler.decorationRanges = [];
-        if (settings.behavior.enabled) {
-            const comments = commentConfigHandler.getComments(activeEditor.document);
-            decorationRangeHandler.addNewDecorationRanges(activeEditor, comments);
+        disposeHiddenEditors();
+        const visibleEditorKeys = new Set(vscode.window.visibleTextEditors.map(getEditorKey));
+        const editorsToUpdate = [...pendingEditors.values()].filter(editor => visibleEditorKeys.has(getEditorKey(editor)));
+        pendingEditors = new Map();
+        for (const editor of editorsToUpdate) {
+            const decorationRangeHandler = getDecorationRangeHandler(editor);
+            decorationRangeHandler.decorationRanges = [];
+            if (settings.behavior.enabled) {
+                commentConfigHandler.updateCurrentConfig(editor.document.languageId);
+                const comments = commentConfigHandler.getComments(editor.document);
+                decorationRangeHandler.addNewDecorationRanges(editor, comments);
+            }
+            decorationRangeHandler.redrawDecorationRanges(editor, settings); // This one takes a long time
         }
-        decorationRangeHandler.redrawDecorationRanges(activeEditor, settings); // This one takes a long time
         timeout = undefined;
     }, delay );
 };
@@ -60,25 +89,38 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Get the active editor for the first time and initialize
     editorChange(vscode.window.activeTextEditor);
+    triggerUpdateDecorations();
 
     // Define all commands {#aca}
     for (const command of commands)
         context.subscriptions.push(command);
 
     // Handle active file changed {#ff0}
-    vscode.window.onDidChangeActiveTextEditor(editorChange);
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+        editorChange(editor);
+        triggerUpdateDecorations();
+    });
 
-    // Handle file contents changed {#ff0,12}
+    // Handle visible editors changed {#ff0}
+    vscode.window.onDidChangeVisibleTextEditors(editors => {
+        disposeHiddenEditors();
+        triggerUpdateDecorations(editors);
+    });
+
+    // Handle file contents changed {#ff0,14}
     vscode.workspace.onDidChangeTextDocument(event => {
-        if (activeEditor && event.document === activeEditor.document) {
+        const changedEditors = vscode.window.visibleTextEditors.filter(editor => editor.document === event.document);
+        if (changedEditors.length) {
             if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
                 // Event was not caused by an undo/redo
                 // Manually update existing decoration text
-                if (settings.behavior.autoUpdate)
-                    decorationRangeHandler.updateExistingDecorationRanges(activeEditor, event.contentChanges);
+                if (settings.behavior.autoUpdate) {
+                    const editorForUpdate = changedEditors.find(editor => editor === activeEditor) ?? changedEditors[0];
+                    getDecorationRangeHandler(editorForUpdate).updateExistingDecorationRanges(editorForUpdate, event.contentChanges);
+                }
             }
-            triggerUpdateDecorations();
+            triggerUpdateDecorations(changedEditors);
         }
     });
 
@@ -90,4 +132,8 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {
+    for (const handler of decorationRangeHandlers.values())
+        handler.dispose();
+    decorationRangeHandlers.clear();
+}
