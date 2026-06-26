@@ -93,6 +93,41 @@ export class DecorationRangeHandler {
         }, { undoStopBefore: false, undoStopAfter: false });
     };
 
+    public replaceLineCountsForInsertedLines(
+        editBuilder: vscode.TextEditorEdit,
+        doc: vscode.TextDocument,
+        insertions: readonly { position: vscode.Position; lineCount: number }[],
+    ) {
+        const lineCountDiffs = new Map<DecorationRange, number>();
+
+        for (const insertion of insertions) {
+            for (const decorationRange of this.decorationRanges) {
+                if (!decorationRange.nLines) continue;
+
+                const validChangeRange = new vscode.Range(
+                    doc.lineAt(decorationRange.codeStartLine-1).range.end,
+                    doc.lineAt(safeGetLineNr(decorationRange.endLine, doc)).range.end,
+                );
+
+                if (validChangeRange.contains(insertion.position))
+                    lineCountDiffs.set(
+                        decorationRange,
+                        (lineCountDiffs.get(decorationRange) ?? 0) + insertion.lineCount
+                    );
+            }
+        }
+
+        for (const [decorationRange, diff] of lineCountDiffs) {
+            const editRange = doc.getWordRangeAtPosition(doc.positionAt(decorationRange.nLines!.range[0]));
+            if (!editRange) continue;
+
+            const currentText = doc.getText(editRange);
+            if (!/^\d+$/.test(currentText)) continue;
+
+            editBuilder.replace(editRange, (parseInt(currentText) + diff).toString());
+        }
+    }
+
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         const doc = activeEditor.document;
         const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);

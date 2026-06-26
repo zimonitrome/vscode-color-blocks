@@ -12,10 +12,9 @@ Should do:
     * If this is revisited, prefer surgical guards over timing delays.
 * Update videos and images to show 2.0.0 behvaior
 * Test performance on slow PCs.
-* Fix bug: Line copying (alt+up/down) creates undoStops
-    * LOTS OF STUFF CREATES UNDOSTOPS! WHY??? WHY VSCODE?????
 
 Could do:
+* Investigate other built-in VS Code operations that can split undo history when `autoUpdate` edits line counts.
 * Improve the publish script.
 * Performance
     * Parsing many lines halts the application. I.e. if you have a color block with a very large number of lines.

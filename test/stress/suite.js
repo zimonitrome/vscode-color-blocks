@@ -205,6 +205,54 @@ async function runSideBySideScenario() {
     return result;
 }
 
+async function runCopyLineUndoScenario() {
+    console.log('Copying a line inside a color block and checking undo grouping...');
+    const editor = await openStressEditorFromContent('typescript', [
+        'export function undoGrouping() {',
+        '    // Undo grouping {#88f, 2}',
+        '    const alpha = 1;',
+        '    const beta = 2;',
+        '}',
+    ].join('\n'));
+    await sleep(1000);
+
+    const originalText = editor.document.getText();
+    editor.selection = new vscode.Selection(2, 0, 2, 0);
+
+    await vscode.commands.executeCommand('color-blocks.copyLinesDown');
+    await sleep(1000);
+    const textAfterCopy = editor.document.getText();
+    await vscode.commands.executeCommand('undo');
+    await sleep(1000);
+    const restoredAfterCopyDownUndo = editor.document.getText() === originalText;
+
+    editor.selection = new vscode.Selection(3, 0, 3, 0);
+    await vscode.commands.executeCommand('color-blocks.copyLinesUp');
+    await sleep(1000);
+    const textAfterCopyUp = editor.document.getText();
+    await vscode.commands.executeCommand('undo');
+    await sleep(1000);
+
+    const result = {
+        scenario: 'copy-line-undo-grouping',
+        updatedCountAfterCopyDown: textAfterCopy.includes('{#88f, 3}'),
+        restoredAfterCopyDownUndo,
+        updatedCountAfterCopyUp: textAfterCopyUp.includes('{#88f, 3}'),
+        restoredAfterCopyUpUndo: editor.document.getText() === originalText,
+        textAfterUndo: editor.document.getText(),
+    };
+
+    console.log(`STRESS_RESULT ${JSON.stringify(result)}`);
+    if (isStrict) {
+        assert.strictEqual(result.updatedCountAfterCopyDown, true, 'copy line down should update the color block line count');
+        assert.strictEqual(result.restoredAfterCopyDownUndo, true, 'copy line down should be restored after a single undo');
+        assert.strictEqual(result.updatedCountAfterCopyUp, true, 'copy line up should update the color block line count');
+        assert.strictEqual(result.restoredAfterCopyUpUndo, true, 'copy line up should be restored after a single undo');
+    }
+
+    return result;
+}
+
 async function run() {
     const createTextEditorDecorationType = vscode.window.createTextEditorDecorationType.bind(vscode.window);
     vscode.window.createTextEditorDecorationType = (...args) => {
@@ -231,6 +279,7 @@ async function run() {
         60
     );
     await runSideBySideScenario();
+    await runCopyLineUndoScenario();
 
     assert.ok(manyBlocks.lineCount > 3000);
     assert.ok(hugeBlocks.lineCount > 4000);

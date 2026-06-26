@@ -7,11 +7,12 @@ import commands from './commands';
 
 export const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
 
-// Local variables {#e77,4}
+// Local variables {#e77,5}
 const commentConfigHandler = new CommentConfigHandler();
 const decorationRangeHandlers = new Map<string, DecorationRangeHandler>();
 let activeEditor: vscode.TextEditor | undefined;
 let settings = getSettings();
+const skipAutoUpdateDocumentKeys = new Set<string>();
 
 const getEditorKey = (editor: vscode.TextEditor) => `${editor.document.uri.toString()}:${editor.viewColumn ?? 0}`;
 
@@ -81,6 +82,54 @@ const triggerUpdateDecorations = (editors = vscode.window.visibleTextEditors) =>
     }, delay );
 };
 
+const getSelectedLineRanges = (editor: vscode.TextEditor) => {
+    const ranges = editor.selections.map(selection => {
+        const startLine = Math.min(selection.start.line, selection.end.line);
+        let endLine = Math.max(selection.start.line, selection.end.line);
+
+        if (!selection.isEmpty && selection.end.character === 0 && selection.end.line > selection.start.line)
+            endLine--;
+
+        return { startLine, endLine };
+    }).sort((a, b) => a.startLine - b.startLine || a.endLine - b.endLine);
+
+    return ranges.reduce((merged, range) => {
+        const previous = merged[merged.length - 1];
+        if (previous && range.startLine <= previous.endLine + 1)
+            previous.endLine = Math.max(previous.endLine, range.endLine);
+        else
+            merged.push({ ...range });
+        return merged;
+    }, [] as { startLine: number; endLine: number }[]);
+};
+
+const copyLines = (editor: vscode.TextEditor, editBuilder: vscode.TextEditorEdit, direction: 'up' | 'down') => {
+    const doc = editor.document;
+    const eol = doc.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+    const lineRanges = getSelectedLineRanges(editor);
+    const insertions: { position: vscode.Position; lineCount: number }[] = [];
+
+    for (const lineRange of direction === 'up' ? [...lineRanges].reverse() : lineRanges) {
+        const lines = [];
+        for (let lineNr = lineRange.startLine; lineNr <= lineRange.endLine; lineNr++)
+            lines.push(doc.lineAt(lineNr).text);
+
+        const text = lines.join(eol);
+        const lineCount = lineRange.endLine - lineRange.startLine + 1;
+        const position = direction === 'up'
+            ? new vscode.Position(lineRange.startLine, 0)
+            : doc.lineAt(lineRange.endLine).range.end;
+
+        editBuilder.insert(position, direction === 'up' ? `${text}${eol}` : `${eol}${text}`);
+        insertions.push({ position, lineCount });
+    }
+
+    if (settings.behavior.autoUpdate)
+        getDecorationRangeHandler(editor).replaceLineCountsForInsertedLines(editBuilder, doc, insertions);
+
+    skipAutoUpdateDocumentKeys.add(doc.uri.toString());
+};
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -95,6 +144,15 @@ export function activate(context: vscode.ExtensionContext) {
     for (const command of commands)
         context.subscriptions.push(command);
 
+    context.subscriptions.push(vscode.commands.registerTextEditorCommand(
+        'color-blocks.copyLinesDown',
+        (editor, editBuilder) => copyLines(editor, editBuilder, 'down')
+    ));
+    context.subscriptions.push(vscode.commands.registerTextEditorCommand(
+        'color-blocks.copyLinesUp',
+        (editor, editBuilder) => copyLines(editor, editBuilder, 'up')
+    ));
+
     // Handle active file changed {#ff0}
     vscode.window.onDidChangeActiveTextEditor(editor => {
         editorChange(editor);
@@ -107,11 +165,13 @@ export function activate(context: vscode.ExtensionContext) {
         triggerUpdateDecorations(editors);
     });
 
-    // Handle file contents changed {#ff0,14}
+    // Handle file contents changed {#ff0,17}
     vscode.workspace.onDidChangeTextDocument(event => {
         const changedEditors = vscode.window.visibleTextEditors.filter(editor => editor.document === event.document);
         if (changedEditors.length) {
-            if (event.reason !== vscode.TextDocumentChangeReason.Undo &&
+            const skipAutoUpdate = skipAutoUpdateDocumentKeys.delete(event.document.uri.toString());
+            if (!skipAutoUpdate &&
+                event.reason !== vscode.TextDocumentChangeReason.Undo &&
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
                 // Event was not caused by an undo/redo
                 // Manually update existing decoration text

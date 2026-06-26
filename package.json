@@ -38,12 +38,30 @@
 			{
 				"command": "color-blocks.toggle",
 				"title": "Toggle enable/disable color blocks."
+			},
+			{
+				"command": "color-blocks.copyLinesDown",
+				"title": "Color Blocks: Copy Line Down"
+			},
+			{
+				"command": "color-blocks.copyLinesUp",
+				"title": "Color Blocks: Copy Line Up"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "color-blocks.add",
 				"key": "ctrl+K ctrl+B"
+			},
+			{
+				"command": "color-blocks.copyLinesDown",
+				"key": "shift+alt+down",
+				"when": "editorTextFocus && !editorReadonly"
+			},
+			{
+				"command": "color-blocks.copyLinesUp",
+				"key": "shift+alt+up",
+				"when": "editorTextFocus && !editorReadonly"
 			}
 		],
 		"snippets": [
