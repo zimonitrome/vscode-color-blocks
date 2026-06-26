@@ -6,9 +6,6 @@ Should do:
         * Addresses side-by-side editor visibility, especially issue #19.
         * Maintain one decoration handler per visible editor so disposing/redrawing one editor does not erase another.
         * Listen to `onDidChangeVisibleTextEditors` and refresh affected editors.
-    * Make automatic line-count updates less intrusive.
-        * Consider debouncing source edits, defaulting auto-update off, or making updates a command/code action.
-        * Keep protecting normal typing edits from extension-owned edits.
     * Extend automated verification.
         * Add stress cases for side-by-side visible editors.
         * Add shell and PowerShell documents for `${GREEN}` and `#` comment behavior.
@@ -18,6 +15,9 @@ Should do:
         * It looked worse, lost wrapped/indent-aware block sizing, and was not faster in stress runs.
         * Do not add a native render mode unless VS Code exposes a better block decoration API later.
 * Completed recently:
+    * Debounced automatic line-count source edits.
+        * Track pending count replacements across nearby edits.
+        * Apply extension-owned count updates after typing settles.
     * Cached decoration types by style key.
         * Stress comparison for decoration type creation:
             * Many blocks: 600 -> 27.

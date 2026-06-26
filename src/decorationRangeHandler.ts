@@ -20,6 +20,13 @@ interface DecorationRange {
     endLine: number;
 }
 
+interface PendingLineCountEdit {
+    editor: vscode.TextEditor;
+    rangeStart: number;
+    rangeEnd: number;
+    text: string;
+}
+
 const safeGetLineNr = (lineNr: number, doc: vscode.TextDocument) => Math.min(lineNr, doc.lineCount - 1);
 
 export class DecorationRangeHandler {
@@ -28,6 +35,9 @@ export class DecorationRangeHandler {
     private decorationTypeCache = new Map<string, vscode.TextEditorDecorationType>();
     private activeDecorationKeys = new Set<string>();
     private pendingDecorations = new Map<string, vscode.Range[]>();
+    private pendingLineCountEdits = new Map<string, PendingLineCountEdit>();
+    private pendingLineCountEditTimer: NodeJS.Timer | undefined;
+    private readonly lineCountEditDelayMs = 150;
 
     private queueDecorations(
         key: string,
@@ -59,6 +69,11 @@ export class DecorationRangeHandler {
     }
 
     public dispose() {
+        if (this.pendingLineCountEditTimer)
+            clearTimeout(this.pendingLineCountEditTimer);
+
+        this.pendingLineCountEditTimer = undefined;
+        this.pendingLineCountEdits.clear();
         this.decorationTypeCache.forEach(dt => dt.dispose());
         this.decorationTypeCache.clear();
         this.activeDecorationKeys.clear();
@@ -77,21 +92,151 @@ export class DecorationRangeHandler {
         this.flushDecorations(activeEditor);
     };
 
-    private async makeReplaceEdit(editor: vscode.TextEditor, range: vscode.Range, text: string) {
+    private getLineCountEditKey(doc: vscode.TextDocument, rangeStart: number, rangeEnd: number) {
+        return `${doc.uri.toString()}:${rangeStart}:${rangeEnd}`;
+    }
+
+    private rangesIntersect(
+        firstStart: number,
+        firstEnd: number,
+        secondStart: number,
+        secondEnd: number,
+    ) {
+        return firstStart < secondEnd && secondStart < firstEnd;
+    }
+
+    private scheduleLineCountEditFlush() {
+        if (this.pendingLineCountEditTimer)
+            clearTimeout(this.pendingLineCountEditTimer);
+
+        if (!this.pendingLineCountEdits.size) {
+            this.pendingLineCountEditTimer = undefined;
+            return;
+        }
+
+        this.pendingLineCountEditTimer = setTimeout(() => {
+            this.pendingLineCountEditTimer = undefined;
+            this.flushPendingLineCountEdits().catch(console.error);
+        }, this.lineCountEditDelayMs);
+    }
+
+    private trackLineCountEdit(editor: vscode.TextEditor, range: vscode.Range, text: string) {
         const currentText = editor.document.getText(range);
         if (currentText === text || !/^\d+$/.test(currentText)) return;
 
-        await editor.edit(editBuilder => {
-            editBuilder.replace(
-                range,
-                text
-            );
-        }, { undoStopBefore: false, undoStopAfter: false });
+        const rangeStart = editor.document.offsetAt(range.start);
+        const rangeEnd = editor.document.offsetAt(range.end);
+        const uri = editor.document.uri.toString();
+
+        for (const [key, pendingEdit] of this.pendingLineCountEdits) {
+            if (
+                pendingEdit.editor.document.uri.toString() === uri &&
+                this.rangesIntersect(pendingEdit.rangeStart, pendingEdit.rangeEnd, rangeStart, rangeEnd)
+            )
+                this.pendingLineCountEdits.delete(key);
+        }
+
+        this.pendingLineCountEdits.set(this.getLineCountEditKey(editor.document, rangeStart, rangeEnd), {
+            editor,
+            rangeStart,
+            rangeEnd,
+            text,
+        });
+        this.scheduleLineCountEditFlush();
     };
+
+    private shiftPendingLineCountEdits(
+        doc: vscode.TextDocument,
+        contentChanges: readonly vscode.TextDocumentContentChangeEvent[],
+    ) {
+        if (!this.pendingLineCountEdits.size) return;
+
+        const uri = doc.uri.toString();
+        const shiftedEdits = new Map<string, PendingLineCountEdit>();
+
+        for (const [key, pendingEdit] of this.pendingLineCountEdits) {
+            if (pendingEdit.editor.document.uri.toString() !== uri) {
+                shiftedEdits.set(key, pendingEdit);
+                continue;
+            }
+
+            let rangeStart = pendingEdit.rangeStart;
+            let rangeEnd = pendingEdit.rangeEnd;
+            let editIsValid = true;
+
+            for (const change of contentChanges) {
+                const changeStart = change.rangeOffset;
+                const changeEnd = change.rangeOffset + change.rangeLength;
+                const diff = change.text.length - change.rangeLength;
+
+                if (changeEnd <= rangeStart) {
+                    rangeStart += diff;
+                    rangeEnd += diff;
+                }
+                else if (this.rangesIntersect(changeStart, changeEnd, rangeStart, rangeEnd)) {
+                    editIsValid = false;
+                    break;
+                }
+            }
+
+            if (!editIsValid) continue;
+
+            const shiftedEdit = {
+                ...pendingEdit,
+                rangeStart,
+                rangeEnd,
+            };
+            shiftedEdits.set(this.getLineCountEditKey(doc, rangeStart, rangeEnd), shiftedEdit);
+        }
+
+        this.pendingLineCountEdits = shiftedEdits;
+        this.scheduleLineCountEditFlush();
+    }
+
+    private async flushPendingLineCountEdits() {
+        const pendingEdits = [...this.pendingLineCountEdits.values()];
+        this.pendingLineCountEdits.clear();
+
+        const editsByEditor = new Map<vscode.TextEditor, PendingLineCountEdit[]>();
+        for (const pendingEdit of pendingEdits) {
+            editsByEditor.set(pendingEdit.editor, [
+                ...(editsByEditor.get(pendingEdit.editor) ?? []),
+                pendingEdit
+            ]);
+        }
+
+        for (const [editor, edits] of editsByEditor) {
+            const doc = editor.document;
+            const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);
+            const validEdits: Array<{ range: vscode.Range; text: string }> = [];
+            let lastEditEnd = -1;
+
+            for (const edit of edits.sort((a, b) => a.rangeStart - b.rangeStart)) {
+                if (edit.rangeStart < 0 || edit.rangeStart >= edit.rangeEnd || edit.rangeEnd > documentEndOffset)
+                    continue;
+                if (edit.rangeStart < lastEditEnd) continue;
+
+                const range = new vscode.Range(doc.positionAt(edit.rangeStart), doc.positionAt(edit.rangeEnd));
+                const currentText = doc.getText(range);
+                if (currentText === edit.text || !/^\d+$/.test(currentText)) continue;
+
+                validEdits.push({ range, text: edit.text });
+                lastEditEnd = edit.rangeEnd;
+            }
+
+            if (!validEdits.length) continue;
+
+            await editor.edit(editBuilder => {
+                for (const edit of validEdits)
+                    editBuilder.replace(edit.range, edit.text);
+            }, { undoStopBefore: false, undoStopAfter: false });
+        }
+    }
 
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
         const doc = activeEditor.document;
         const documentEndOffset = doc.offsetAt(doc.lineAt(doc.lineCount - 1).range.end);
+        this.shiftPendingLineCountEdits(doc, contentChanges);
 
         // If the user makes a change inside a decoration that results in a change of # of lines,
         // update the number listed inside the cbc braces.
@@ -128,7 +273,7 @@ export class DecorationRangeHandler {
                     if (!editRange) continue;
 
                     // Make edits {#838}
-                    this.makeReplaceEdit(activeEditor, editRange, nLinesNew.toString());
+                    this.trackLineCountEdit(activeEditor, editRange, nLinesNew.toString());
                 
                 }
             }
