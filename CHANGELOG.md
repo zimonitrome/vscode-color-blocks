@@ -1,3 +1,17 @@
+## [2.4.0]
+
+Major changes:
+
+- Performance improvements. Should also prevent crashes.
+- Enable rendering for side-by-side editors and other multi-editor layouts.
+- Add better support for light themes.
+
+Minor changes / fixes:
+
+- Fixed shell-script false positives such as `${green}` and `${orangered}` being treated as color blocks.
+- Fixed PowerShell line and block comment support.
+- Fixed copy-line up/down shortcuts creating separate undo steps for automatic line-count updates.
+
 ## [v2.3.0]
 
 Support languages without block commands. Improve debouncing with configurable interval. Hotfix visuals and default to wrapping enabled.

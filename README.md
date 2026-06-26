@@ -40,7 +40,7 @@ Color blocks work with both line comments and block comments. All lines in the c
   By start writing `color block` and selecting it from the context menu suggestions.
 
 * **Command**
-  By pressing <kbd>CTRL</kbd>+<kbd>C</kbd> <kbd>CTRL</kbd>+<kbd>B</kbd> in succession (similar to the default command for toggling line comments).
+  By pressing <kbd>CTRL</kbd>+<kbd>K</kbd> <kbd>CTRL</kbd>+<kbd>B</kbd> in succession.
 
   Alternatively by selecting "Add Color Block" from the command palette (<kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd>).
 

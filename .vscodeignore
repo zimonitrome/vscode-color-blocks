@@ -7,8 +7,12 @@ test/**
 AGENTS.md
 CLAUDE.md
 SHARED_AI_SYSTEM_PROMPT.md
+TODO.md
 .gitignore
 .yarnrc
+pnpm-lock.yaml
+pnpm-workspace.yaml
+color-blocks-*.vsix
 webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json

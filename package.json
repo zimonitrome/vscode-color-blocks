@@ -1,7 +1,7 @@
 {
 	"name": "color-blocks",
 	"displayName": "Color Blocks",
-	"version": "2.3.0",
+	"version": "2.4.0",
 	"description": "Highlight ranges of code lines using comments.",
 	"publisher": "zimonitrome",
 	"repository": {
@@ -224,8 +224,7 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint src --ext ts",
-		"deploy": "node ./publish.js"
+		"lint": "eslint src --ext ts"
 	},
 	"devDependencies": {
 		"@types/colornames": "^1.1.2",
