@@ -11,7 +11,7 @@ const mulitlineRegex = ({ raw }: TemplateStringsArray, ...interpolations: string
     );
 
 const regexString = mulitlineRegex`
-{                                           // Start of color block arguments
+(?<!\$){                                    // Start of color block arguments, but ignore shell/template substitutions
 \s*
     (?:                                     // Mandatory argument:
         (?:color\s*:\s*)?                   //  Optional key word

@@ -19,6 +19,10 @@ export interface Comment {
 }
 
 const escapeRegex = (string: string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+const fallbackCommentConfigs = new Map<string, CommentConfig>([
+    ['powershell', { lineComment: '#', blockComment: ['<#', '#>'] }],
+    ['shellscript', { lineComment: '#' }],
+]);
 
 export class CommentConfigHandler {
     private readonly languageCommentConfigPaths = new Map<string, string>();
@@ -59,7 +63,7 @@ export class CommentConfigHandler {
             this.currentCommentConfig = this.languageCommentConfigs.get(languageCode);
 
         else if (!this.languageCommentConfigPaths.has(languageCode))
-            this.currentCommentConfig = undefined;
+            this.currentCommentConfig = fallbackCommentConfigs.get(languageCode);
 
         else {
             const file = this.languageCommentConfigPaths.get(languageCode)!;
@@ -72,8 +76,9 @@ export class CommentConfigHandler {
                 this.languageCommentConfigs.set(languageCode, config.comments);
                 this.currentCommentConfig = config.comments;
             } catch (error) {
-                this.languageCommentConfigs.set(languageCode, undefined);
-                this.currentCommentConfig = undefined;
+                const fallbackConfig = fallbackCommentConfigs.get(languageCode);
+                this.languageCommentConfigs.set(languageCode, fallbackConfig);
+                this.currentCommentConfig = fallbackConfig;
             }
         }
 

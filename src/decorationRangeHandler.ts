@@ -27,10 +27,11 @@ export class DecorationRangeHandler {
     public decorationRanges: Array<DecorationRange> = [];
     private allDecorationTypes: Array<vscode.TextEditorDecorationType> = [];
 
-    // {#88f,9}
+    // {#88f,10}
     public redrawDecorationRanges(activeEditor: vscode.TextEditor, settings: vscode.WorkspaceConfiguration) {
         // Clear all decoration types
         this.allDecorationTypes.forEach(dt => dt.dispose());
+        this.allDecorationTypes = [];
 
         // Color all range lines
         this.decorationRanges.forEach(decorationRange => {
@@ -38,20 +39,16 @@ export class DecorationRangeHandler {
         });
     };
 
-    private async makeReplaceEdit(range: vscode.Range, text: string, maxRetries = 10) {
-        for (let i = 0; i <= maxRetries; i++) {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) return;
+    private async makeReplaceEdit(editor: vscode.TextEditor, range: vscode.Range, text: string) {
+        const currentText = editor.document.getText(range);
+        if (currentText === text || !/^\d+$/.test(currentText)) return;
 
-            const success = await editor.edit(editBuilder => {
-                editBuilder.replace(
-                    range,
-                    text
-                );
-            }, { undoStopBefore: false, undoStopAfter: false });
-
-            if (success) break;
-        }
+        await editor.edit(editBuilder => {
+            editBuilder.replace(
+                range,
+                text
+            );
+        }, { undoStopBefore: false, undoStopAfter: false });
     };
 
     public updateExistingDecorationRanges(activeEditor: vscode.TextEditor, contentChanges: readonly vscode.TextDocumentContentChangeEvent[]) {
@@ -82,6 +79,7 @@ export class DecorationRangeHandler {
                     const intersection = validChangeRange.intersection(change.range)!;
                     const nIntersectingLines = intersection.end.line - intersection.start.line;
                     const diff = linesInserted - nIntersectingLines;
+                    if (diff === 0) continue;
 
                     decorationRange.endLine = safeGetLineNr(decorationRange.endLine + diff, doc);
                     const nLinesNew = decorationRange.endLine - decorationRange.codeStartLine + 1;
@@ -92,14 +90,14 @@ export class DecorationRangeHandler {
                     if (!editRange) continue;
 
                     // Make edits {#838}
-                    this.makeReplaceEdit(editRange, nLinesNew.toString(), 200);
+                    this.makeReplaceEdit(activeEditor, editRange, nLinesNew.toString());
                 
                 }
             }
         }
     };
 
-    // Scan document for color blockS {#88f,61}
+    // Scan document for color blockS {#88f,68}
     public addNewDecorationRanges(activeEditor: vscode.TextEditor, comments: Comment[]) {
         if (!activeEditor) return; // Needed?
         const doc = activeEditor.document;
@@ -204,8 +202,11 @@ export class DecorationRangeHandler {
                 longestLineLength = Math.max(longestLineLength, line.text.length);
             }
 
+            if (shortestIndentation === Infinity)
+                shortestIndentation = 0;
+
             left = `${shortestIndentation}ch`;
-            customWidth = `${longestLineLength - shortestIndentation + settings.wrapText.paddingRight}ch`;
+            customWidth = `${Math.max(0, longestLineLength - shortestIndentation) + settings.wrapText.paddingRight}ch`;
         }
         else {
             // Otherwise, stretch to the entire width of the editor minus the scrollbar
@@ -231,15 +232,38 @@ export class DecorationRangeHandler {
         //   will not render if the line is not visible.
         // The only alternative that works robustly is to style each individual line using
         // the ::after/::before pseudoclass.
-        for (let lineNr = decorationRange.commentStartLine; lineNr <= endLine; lineNr++) {
-            let isTopLine = lineNr === decorationRange.commentStartLine;
-            let isBottomLine = lineNr === endLine;
-            let topRadius = isTopLine ? settings.border.radius : 0;
-            let bottomRadius = isBottomLine ? settings.border.radius : 0;
-            let topWidth = isTopLine ? settings.border.width : 0;
-            let bottomWidth = isBottomLine ? settings.border.width : 0;
+        const blockLineRanges: Record<string, vscode.Range[]> = {
+            top: [],
+            middle: [],
+            bottom: [],
+            single: [],
+        };
 
-            const midLineDecor = vscode.window.createTextEditorDecorationType({
+        for (let lineNr = decorationRange.commentStartLine; lineNr <= endLine; lineNr++) {
+            const isTopLine = lineNr === decorationRange.commentStartLine;
+            const isBottomLine = lineNr === endLine;
+            const key = isTopLine && isBottomLine
+                ? 'single'
+                : isTopLine
+                    ? 'top'
+                    : isBottomLine
+                        ? 'bottom'
+                        : 'middle';
+
+            blockLineRanges[key].push(new vscode.Range(new vscode.Position(lineNr, 0), new vscode.Position(lineNr, 0)));
+        }
+
+        for (const [key, ranges] of Object.entries(blockLineRanges)) {
+            if (!ranges.length) continue;
+
+            const isTopLine = key === 'top' || key === 'single';
+            const isBottomLine = key === 'bottom' || key === 'single';
+            const topRadius = isTopLine ? settings.border.radius : 0;
+            const bottomRadius = isBottomLine ? settings.border.radius : 0;
+            const topWidth = isTopLine ? settings.border.width : 0;
+            const bottomWidth = isBottomLine ? settings.border.width : 0;
+
+            const lineDecorationType = vscode.window.createTextEditorDecorationType({
                 overviewRulerColor: backgroundHexColor,
                 overviewRulerLane: vscode.OverviewRulerLane.Full,
                 isWholeLine: true,
@@ -261,11 +285,8 @@ export class DecorationRangeHandler {
                     height: "100%",
                 },
             });
-            editor.setDecorations(
-                midLineDecor,
-                [new vscode.Range(new vscode.Position(lineNr, 0), new vscode.Position(lineNr, 1))]
-            );
-            this.allDecorationTypes.push(midLineDecor);
+            editor.setDecorations(lineDecorationType, ranges);
+            this.allDecorationTypes.push(lineDecorationType);
         }
 
         // Define relevant ranges
