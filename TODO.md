@@ -20,7 +20,6 @@ Could do:
     * Parsing many lines halts the application. I.e. if you have a color block with a very large number of lines.
 * Command to convert current codes with comment on top to color block.
     * Change current command to do this?
-* Show ranges on minimap. (is this possible?)
 * Change expand on style range if possible
     * Meaning: Make adding/removing newlines smooth and quick.
 * Add optional pattern such as stripes to the background.
@@ -40,7 +39,20 @@ Could do:
 * Add optional left bar.
 * Add opacity to hex color (make 4/8 hex color len OK)
 * Setting to store color ranges in a separate file. For `myfile.py` a 2nd file `myfile.py.cbc` would be used.
+    * Sounds annoying to have many a second file. Should probably be stored in a single file instead.
 * Change wrap option to be separate for pre or post line. (shrink left and shrink right)
+
+Blocked / unavailable:
+* Show colored ranges on the built-in minimap.
+    * The public VS Code extension API does not expose minimap decorations; Color Blocks already uses overview ruler decorations as the closest supported marker.
+    * VS Code issue: https://github.com/microsoft/vscode/issues/82808
+    * Related VS Code issues:
+        * https://github.com/microsoft/vscode/issues/68114
+        * https://github.com/microsoft/vscode/issues/136360
+* Drag-resize handles for color block outlines.
+    * The public VS Code extension API does not expose drag/drop or pointer events for editor decorations.
+    * Closest VS Code issue: https://github.com/microsoft/vscode/issues/120674
+    * Related VS Code issue: https://github.com/microsoft/vscode/issues/47239
 
 Probably won't do:
 * Change the syntax.

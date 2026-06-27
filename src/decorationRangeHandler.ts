@@ -345,6 +345,8 @@ export class DecorationRangeHandler {
             const bottomWidth = isBottomLine ? settings.border.width : 0;
 
             const lineDecorationOptions = {
+                // VS Code's public extension API exposes overview ruler decorations,
+                // but not minimap decorations as of yet. See TODO.md and https://github.com/microsoft/vscode/issues/82808
                 overviewRulerColor: scrollbarHexColor,
                 overviewRulerLane: vscode.OverviewRulerLane.Full,
                 isWholeLine: true,
