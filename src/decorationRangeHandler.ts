@@ -295,7 +295,9 @@ export class DecorationRangeHandler {
             customWidth = `999999px`; // HACK
         }
 
+        const scrollbarOpacity = settings.scrollbar.opacity ?? settings.background.opacity;
         let backgroundHexColor = hexColor + decimalToHexString(255 * settings.background.opacity);
+        let scrollbarHexColor = hexColor + decimalToHexString(255 * scrollbarOpacity);
         let borderHexColor = hexColor + decimalToHexString(255 * settings.border.opacity);
 
         // We must style each line individually because...
@@ -343,7 +345,7 @@ export class DecorationRangeHandler {
             const bottomWidth = isBottomLine ? settings.border.width : 0;
 
             const lineDecorationOptions = {
-                overviewRulerColor: backgroundHexColor,
+                overviewRulerColor: scrollbarHexColor,
                 overviewRulerLane: vscode.OverviewRulerLane.Full,
                 isWholeLine: true,
                 textDecoration: `;
@@ -368,6 +370,7 @@ export class DecorationRangeHandler {
                 [
                     'block-line',
                     backgroundHexColor,
+                    scrollbarHexColor,
                     borderHexColor,
                     settings.border.style,
                     settings.border.width,

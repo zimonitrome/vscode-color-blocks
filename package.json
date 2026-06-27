@@ -159,6 +159,22 @@
 				}
 			},
 			{
+				"title": "Scroll Bar",
+				"properties": {
+					"color-blocks.scrollbar.opacity": {
+						"type": [
+							"number",
+							"null"
+						],
+						"default": null,
+						"minimum": 0,
+						"maximum": 1,
+						"description": "Opacity/alpha in the range 0-1 for color block markers in the editor overview ruler/scroll bar. When unset, Color Blocks uses the background opacity.",
+						"scope": "window"
+					}
+				}
+			},
+			{
 				"title": "Comment Line",
 				"properties": {
 					"color-blocks.commentLine.color": {
