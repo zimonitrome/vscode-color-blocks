@@ -40,9 +40,9 @@ Color blocks work with both line comments and block comments. All lines in the c
   By start writing `color block` and selecting it from the context menu suggestions.
 
 * **Command**
-  By pressing <kbd>CTRL</kbd>+<kbd>K</kbd> <kbd>CTRL</kbd>+<kbd>B</kbd> in succession.
+  By pressing <kbd>CTRL</kbd>+<kbd>K</kbd> <kbd>CTRL</kbd>+<kbd>B</kbd> in succession (<kbd>CMD</kbd>+<kbd>K</kbd> <kbd>CMD</kbd>+<kbd>B</kbd> on macOS).
 
-  Alternatively by selecting "Add Color Block" from the command palette (<kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd>).
+  Alternatively by selecting "Add Color Block" from the command palette (<kbd>CTRL</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd>, or <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> on macOS).
 
 ![feature X](/media/how_to_add_blocks.gif)
 

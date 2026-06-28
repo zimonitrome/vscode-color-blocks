@@ -55,7 +55,8 @@
 		"keybindings": [
 			{
 				"command": "color-blocks.add",
-				"key": "ctrl+K ctrl+B"
+				"key": "ctrl+K ctrl+B",
+				"mac": "cmd+K cmd+B"
 			},
 			{
 				"command": "color-blocks.copyLinesDown",
