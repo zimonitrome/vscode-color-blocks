@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { hexToHsl, hslToHex, decimalToHexString } from './helpers/colorHelpers';
 import { colorBlockRegex } from './helpers/colorBlockRegex';
-import { arrAdd, getIndention } from './helpers/miscHelpers';
+import { arrAdd, getIndention, getVisualWidth } from './helpers/miscHelpers';
 import { Comment } from './commentConfigHandler';
 import toHex = require('colornames');
 
@@ -268,8 +268,10 @@ export class DecorationRangeHandler {
         // Calculate minimum width if wrapping is enabled
         if (settings.wrapText.enabled) {
             let shortestIndentation = Infinity;
-            let longestLineLength = 0;
-            let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
+            let longestLineWidth = 0;
+            // Use the editor's effective tab size (respects detectIndentation and
+            // per-language overrides) rather than the global editor.tabSize setting.
+            let tabSize = Number(editor.options.tabSize) || 4;
             for (let lineNr = decorationRange.commentStartLine; lineNr <= endLine; lineNr++) {
                 let line = doc.lineAt(lineNr);
 
@@ -278,14 +280,16 @@ export class DecorationRangeHandler {
                 let indentation = getIndention(line.text, tabSize);
 
                 shortestIndentation = Math.min(shortestIndentation, indentation);
-                longestLineLength = Math.max(longestLineLength, line.text.length);
+                // Measure the line in visual columns (tabs expanded) so the right
+                // edge lines up with the left edge, which is also a visual column.
+                longestLineWidth = Math.max(longestLineWidth, getVisualWidth(line.text, tabSize));
             }
 
             if (shortestIndentation === Infinity)
                 shortestIndentation = 0;
 
             left = `${shortestIndentation}ch`;
-            customWidth = `${Math.max(0, longestLineLength - shortestIndentation) + settings.wrapText.paddingRight}ch`;
+            customWidth = `${Math.max(0, longestLineWidth - shortestIndentation) + settings.wrapText.paddingRight}ch`;
         }
         else {
             // Otherwise, stretch to the entire width of the editor minus the scrollbar

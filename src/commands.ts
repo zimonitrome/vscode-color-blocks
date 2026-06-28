@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import { getSettings } from './extension';
-import { getIndention } from './helpers/miscHelpers';
 
 const commands = [
     
-    // Command for adding color comments {#454,24}
+    // Command for adding color comments {#454,22}
     vscode.commands.registerCommand("color-blocks.add", () => {
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor) return;
 
-        let tabSize: number = vscode.workspace.getConfiguration("editor").get("tabSize")!;
         let insertMap: Array<number> = []; // Used to track line offsets for multiple selections
         for (let selection of activeEditor.selections) {
             let firstLine = Math.min(selection.end.line, selection.start.line);
@@ -19,8 +17,9 @@ const commands = [
             insertMap.push(firstLine);
 
             const nCommentLines = Math.abs(selection.end.line - selection.start.line + 1);
-            let firstLineText = activeEditor.document.lineAt(firstLine).text;
-            let indention = getIndention(firstLineText, tabSize);
+            // Insert at the first non-whitespace character (a character offset, not a
+            // visual column, so tab-indented lines line up correctly).
+            let indention = activeEditor.document.lineAt(firstLine).firstNonWhitespaceCharacterIndex;
             // Currently no supported way to call existing snippets easily and add custom args?
             activeEditor.insertSnippet(
                 new vscode.SnippetString("$LINE_COMMENT ${1} {#${2:${RANDOM_HEX/(.).?(.).?(.).?/$1$2$3/}}," + nCommentLines.toString() + "}\n"),

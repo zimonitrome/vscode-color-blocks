@@ -196,6 +196,12 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveColorTheme(event => {
         triggerUpdateDecorations();
     });
+
+    // Handle tab size / indentation options changing (e.g. switching tab width).
+    // These don't fire onDidChangeConfiguration, so redraw explicitly.
+    vscode.window.onDidChangeTextEditorOptions(event => {
+        triggerUpdateDecorations([event.textEditor]);
+    });
 }
 
 // this method is called when your extension is deactivated
