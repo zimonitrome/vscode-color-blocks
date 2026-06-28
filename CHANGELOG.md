@@ -1,3 +1,9 @@
+## [2.5.0]
+
+- Fixed misaligned color blocks on tab-indented and mixed tab/space code.
+- Added per-language overrides for the `enabled` and `autoUpdate` settings (e.g. disable color blocks for `[gitignore]`).
+- Added a command to toggle automatic line-count updates.
+
 ## [2.4.0]
 
 Major changes:
