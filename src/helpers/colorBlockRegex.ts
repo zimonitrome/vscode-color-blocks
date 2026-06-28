@@ -30,4 +30,38 @@ const regexString = mulitlineRegex`
 }                                           // End of color block arguments
 `;
 
-export const colorBlockRegex = new RegExp(regexString, 'd'); // 'd' flag is used to get ranges of named match groups.
+// NOTE: intentionally no 'd' (match indices) flag. Reading match.indices crashes
+// when the Todo Tree extension is installed, because it globally polyfills the
+// indices getter and throws "Invalid flags: d" (issue #6). Group ranges are
+// computed manually in getColorBlockRanges instead.
+export const colorBlockRegex = new RegExp(regexString);
+
+export interface ColorBlockRanges {
+    whole: [number, number];
+    color: [number, number];
+    lines?: [number, number];
+}
+
+// Offsets of the whole match and the named groups, relative to the searched
+// string. The positions are deterministic from the regex structure: an opening
+// `{`, optional whitespace and `color:` keyword, the color value, then an
+// optional line count (the only digit run after the color).
+export const getColorBlockRanges = (match: RegExpExecArray): ColorBlockRanges => {
+    const start = match.index;
+    const text = match[0];
+
+    const whole: [number, number] = [start, start + text.length];
+
+    const colorOffset = /^\{\s*(?:color\s*:\s*)?/.exec(text)![0].length;
+    const colorValue = match.groups!.color;
+    const color: [number, number] = [start + colorOffset, start + colorOffset + colorValue.length];
+
+    let lines: [number, number] | undefined;
+    if (match.groups!.lines) {
+        const afterColor = colorOffset + colorValue.length;
+        const linesOffset = afterColor + /\d+/.exec(text.slice(afterColor))!.index;
+        lines = [start + linesOffset, start + linesOffset + match.groups!.lines.length];
+    }
+
+    return { whole, color, lines };
+};

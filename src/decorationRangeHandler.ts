@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { hexToHsl, hslToHex, decimalToHexString } from './helpers/colorHelpers';
-import { colorBlockRegex } from './helpers/colorBlockRegex';
+import { colorBlockRegex, getColorBlockRanges } from './helpers/colorBlockRegex';
 import { arrAdd, getIndention, getVisualWidth } from './helpers/miscHelpers';
 import { Comment } from './commentConfigHandler';
 import toHex = require('colornames');
@@ -188,6 +188,8 @@ export class DecorationRangeHandler {
             if (!match)
                 continue;
 
+            const matchRanges = getColorBlockRanges(match);
+
             const colorHex = match.groups?.color.startsWith('#')
                 ? match.groups.color
                 : toHex(match.groups?.color ?? ''); // returns undefined if argument isn't a named color
@@ -206,7 +208,7 @@ export class DecorationRangeHandler {
                 nLinesAfterComment = parseInt(match.groups!.lines);
                 nLines = {
                     content: nLinesAfterComment,
-                    range: arrAdd(match.indices!.groups!.lines, matchOffset) as [number, number]
+                    range: arrAdd(matchRanges.lines!, matchOffset) as [number, number]
                 };
             }
             else {
@@ -230,11 +232,11 @@ export class DecorationRangeHandler {
                 comment: comment,
                 argumentBlock: {
                     content: match[0],
-                    range: arrAdd(match.indices![0]!, matchOffset) as [number, number]
+                    range: arrAdd(matchRanges.whole, matchOffset) as [number, number]
                 },
                 hexColor: {
                     content: colorHex,
-                    range: arrAdd(match.indices!.groups!.color, matchOffset) as [number, number]
+                    range: arrAdd(matchRanges.color, matchOffset) as [number, number]
                 },
                 nLines: nLines,
                 commentStartLine: commentStartLineNumber,
