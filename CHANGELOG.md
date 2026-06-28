@@ -1,3 +1,8 @@
+## [2.5.1]
+
+- Fixed a crash and missing color blocks when the Todo Tree extension is installed.
+- Use Cmd+K Cmd+B for the "Add Color Block" shortcut on macOS.
+
 ## [2.5.0]
 
 - Fixed misaligned color blocks on tab-indented and mixed tab/space code.
