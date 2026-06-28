@@ -34,6 +34,14 @@ const commands = [
     vscode.commands.registerCommand("color-blocks.toggle", () => {
         const settings = getSettings();
         settings.update("behavior.enabled", !settings.behavior.enabled);
+    }),
+
+    // Command for toggling automatic line-count updates {#454,5}
+    vscode.commands.registerCommand("color-blocks.toggleAutoUpdate", () => {
+        const settings = getSettings();
+        const next = !settings.behavior.autoUpdate;
+        settings.update("behavior.autoUpdate", next);
+        vscode.window.setStatusBarMessage(`Color Blocks auto-update ${next ? "enabled" : "disabled"}.`, 3000);
     })
 
 ];

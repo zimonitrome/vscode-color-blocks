@@ -40,6 +40,10 @@
 				"title": "Toggle enable/disable color blocks."
 			},
 			{
+				"command": "color-blocks.toggleAutoUpdate",
+				"title": "Color Blocks: Toggle auto-update."
+			},
+			{
 				"command": "color-blocks.copyLinesDown",
 				"title": "Color Blocks: Copy Line Down"
 			},
