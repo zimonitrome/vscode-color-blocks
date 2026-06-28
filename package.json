@@ -209,14 +209,14 @@
 					"color-blocks.behavior.autoUpdate": {
 						"type": "boolean",
 						"default": true,
-						"description": "Automatically update color blocks when lines are added/removed inside its range.",
-						"scope": "window"
+						"description": "Automatically update color blocks when lines are added/removed inside its range. Can be overridden per language, e.g. \"[gitignore]\": { \"color-blocks.behavior.autoUpdate\": false }.",
+						"scope": "language-overridable"
 					},
 					"color-blocks.behavior.enabled": {
 						"type": "boolean",
 						"default": true,
-						"description": "Toggle showing color blocks.",
-						"scope": "window"
+						"description": "Toggle showing color blocks. Can be overridden per language, e.g. \"[gitignore]\": { \"color-blocks.behavior.enabled\": false }.",
+						"scope": "language-overridable"
 					},
 					"color-blocks.behavior.debounceInterval": {
 						"type": "number",

@@ -5,7 +5,9 @@ import { CommentConfigHandler } from './commentConfigHandler';
 import { DecorationRangeHandler } from './decorationRangeHandler';
 import commands from './commands';
 
-export const getSettings = () => vscode.workspace.getConfiguration("color-blocks");
+// Pass a document (or other scope) to resolve language-specific overrides,
+// e.g. "[gitignore]": { "color-blocks.behavior.enabled": false }.
+export const getSettings = (scope?: vscode.ConfigurationScope) => vscode.workspace.getConfiguration("color-blocks", scope);
 
 // Local variables {#e77,5}
 const commentConfigHandler = new CommentConfigHandler();
@@ -49,7 +51,7 @@ const editorChange = (editor: vscode.TextEditor | undefined) => {
 * this function implements a "leading-edge debounce"
 * with a configurable delay via the settings.
 Copied from: https://github.com/aaron-bond/better-comments/blob/master/src/extension.ts
-{#88f,30}
+{#88f,31}
 */
 let timeout: NodeJS.Timer | undefined;
 let pendingEditors = new Map<string, vscode.TextEditor>();
@@ -71,12 +73,13 @@ const triggerUpdateDecorations = (editors = vscode.window.visibleTextEditors) =>
         for (const editor of editorsToUpdate) {
             const decorationRangeHandler = getDecorationRangeHandler(editor);
             decorationRangeHandler.decorationRanges = [];
-            if (settings.behavior.enabled) {
+            const documentSettings = getSettings(editor.document);
+            if (documentSettings.behavior.enabled) {
                 commentConfigHandler.updateCurrentConfig(editor.document.languageId);
                 const comments = commentConfigHandler.getComments(editor.document);
                 decorationRangeHandler.addNewDecorationRanges(editor, comments);
             }
-            decorationRangeHandler.redrawDecorationRanges(editor, settings); // This one takes a long time
+            decorationRangeHandler.redrawDecorationRanges(editor, documentSettings); // This one takes a long time
         }
         timeout = undefined;
     }, delay );
@@ -124,7 +127,7 @@ const copyLines = (editor: vscode.TextEditor, editBuilder: vscode.TextEditorEdit
         insertions.push({ position, lineCount });
     }
 
-    if (settings.behavior.autoUpdate)
+    if (getSettings(doc).behavior.autoUpdate)
         getDecorationRangeHandler(editor).replaceLineCountsForInsertedLines(editBuilder, doc, insertions);
 
     skipAutoUpdateDocumentKeys.add(doc.uri.toString());
@@ -175,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
                 event.reason !== vscode.TextDocumentChangeReason.Redo) {
                 // Event was not caused by an undo/redo
                 // Manually update existing decoration text
-                if (settings.behavior.autoUpdate) {
+                if (getSettings(event.document).behavior.autoUpdate) {
                     const editorForUpdate = changedEditors.find(editor => editor === activeEditor) ?? changedEditors[0];
                     getDecorationRangeHandler(editorForUpdate).updateExistingDecorationRanges(editorForUpdate, event.contentChanges);
                 }
