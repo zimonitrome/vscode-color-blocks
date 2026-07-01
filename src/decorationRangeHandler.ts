@@ -290,8 +290,9 @@ export class DecorationRangeHandler {
             if (shortestIndentation === Infinity)
                 shortestIndentation = 0;
 
-            left = `${shortestIndentation}ch`;
-            customWidth = `${Math.max(0, longestLineWidth - shortestIndentation) + settings.wrapText.paddingRight}ch`;
+            const paddingLeft = settings.wrapText.paddingLeft ?? 1;
+            left = `${Math.max(0, shortestIndentation - paddingLeft)}ch`;
+            customWidth = `${Math.max(0, longestLineWidth - shortestIndentation) + paddingLeft + settings.wrapText.paddingRight}ch`;
         }
         else {
             // Otherwise, stretch to the entire width of the editor minus the scrollbar
@@ -386,6 +387,7 @@ export class DecorationRangeHandler {
                     key,
                     left,
                     customWidth,
+                    settings.wrapText.paddingLeft ?? 1,
                 ].join('|'),
                 lineDecorationOptions,
                 ranges
