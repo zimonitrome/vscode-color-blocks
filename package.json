@@ -90,6 +90,12 @@
 						"default": 1,
 						"description": "Padding to add to the right of the color block if `wrapText` is enabled. Measured in characters.",
 						"scope": "window"
+					},
+					"color-blocks.wrapText.paddingLeft": {
+						"type": "number",
+						"default": 1,
+						"description": "Padding to add between the left border and code if `wrapText` is enabled. Measured in characters.",
+						"scope": "window"
 					}
 				}
 			},
